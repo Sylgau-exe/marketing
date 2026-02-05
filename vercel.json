@@ -14,6 +14,7 @@
     { "source": "/api/game/create", "destination": "/api/game/create.js" },
     { "source": "/api/game/join", "destination": "/api/game/join.js" },
     { "source": "/api/game/list", "destination": "/api/game/list.js" },
+    { "source": "/api/game/quick-join", "destination": "/api/game/quick-join.js" },
     { "source": "/api/game/details", "destination": "/api/game/details.js" },
     { "source": "/api/game/advance", "destination": "/api/game/advance.js" },
     { "source": "/api/simulation/submit-decisions", "destination": "/api/simulation/submit-decisions.js" },
