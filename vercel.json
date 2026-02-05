@@ -1,0 +1,27 @@
+{
+  "rewrites": [
+    { "source": "/api/auth/login", "destination": "/api/auth/login.js" },
+    { "source": "/api/auth/register", "destination": "/api/auth/register.js" },
+    { "source": "/api/auth/me", "destination": "/api/auth/me.js" },
+    { "source": "/api/auth/forgot-password", "destination": "/api/auth/forgot-password.js" },
+    { "source": "/api/auth/reset-password", "destination": "/api/auth/reset-password.js" },
+    { "source": "/api/auth/google", "destination": "/api/auth/google/index.js" },
+    { "source": "/api/auth/google/callback", "destination": "/api/auth/google/callback.js" },
+    { "source": "/api/admin/stats", "destination": "/api/admin/stats.js" },
+    { "source": "/api/admin/users", "destination": "/api/admin/users.js" },
+    { "source": "/api/admin/edit-user", "destination": "/api/admin/edit-user.js" },
+    { "source": "/api/admin/delete-user", "destination": "/api/admin/delete-user.js" },
+    { "source": "/api/game/create", "destination": "/api/game/create.js" },
+    { "source": "/api/game/join", "destination": "/api/game/join.js" },
+    { "source": "/api/game/list", "destination": "/api/game/list.js" },
+    { "source": "/api/game/details", "destination": "/api/game/details.js" },
+    { "source": "/api/game/advance", "destination": "/api/game/advance.js" },
+    { "source": "/api/simulation/submit-decisions", "destination": "/api/simulation/submit-decisions.js" },
+    { "source": "/api/simulation/get-decisions", "destination": "/api/simulation/get-decisions.js" },
+    { "source": "/api/simulation/get-results", "destination": "/api/simulation/get-results.js" },
+    { "source": "/api/simulation/market-research", "destination": "/api/simulation/market-research.js" },
+    { "source": "/api/simulation/leaderboard", "destination": "/api/simulation/leaderboard.js" },
+    { "source": "/api/team/brands", "destination": "/api/team/brands.js" },
+    { "source": "/api/team/members", "destination": "/api/team/members.js" }
+  ]
+}

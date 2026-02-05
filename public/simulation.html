@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation — MarketSim Live</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#111827;--border:#1e293b;--primary:#3b82f6;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--surface:#1e293b}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--primary);text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+.btn{padding:8px 20px;border-radius:8px;border:none;font-weight:600;font-size:.85rem;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--primary)}
+.btn-green{background:var(--green);color:#fff;padding:10px 28px;font-size:.95rem}
+.btn-green:hover{opacity:.9}
+.btn-sm{padding:6px 14px;font-size:.8rem}
+select,input[type=number],input[type=text]{padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.85rem;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:var(--primary)}
+
+/* Top Bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar .logo{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.game-info{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted)}
+.game-info .code{background:var(--surface);padding:3px 10px;border-radius:4px;font-family:monospace;color:var(--yellow)}
+.quarter-badge{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;padding:4px 14px;border-radius:20px;font-weight:700;font-size:.85rem}
+.topbar-right{display:flex;align-items:center;gap:10px}
+
+/* Layout */
+.app-layout{display:flex;flex:1;overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:8px 0}
+.sidebar-label{font-size:.7rem;text-transform:uppercase;color:var(--muted);padding:8px 16px 4px;letter-spacing:.05em;font-weight:600}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:.85rem;cursor:pointer;transition:all .15s;color:var(--muted);border-left:3px solid transparent}
+.sidebar-item:hover{background:rgba(59,130,246,.05);color:var(--text)}
+.sidebar-item.active{background:rgba(59,130,246,.08);color:var(--primary);border-left-color:var(--primary);font-weight:600}
+.sidebar-divider{height:1px;background:var(--border);margin:4px 0}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)}
+
+/* Main Content */
+.main{flex:1;overflow-y:auto;padding:24px}
+.main h2{font-size:1.3rem;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* Cards & Panels */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.panel h3{font-size:1rem;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.stat-card{background:var(--surface);border-radius:10px;padding:16px}
+.stat-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.stat-value{font-size:1.4rem;font-weight:700;margin-top:4px}
+.stat-value.positive{color:var(--green)}.stat-value.negative{color:var(--red)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:8px 12px;color:var(--muted);font-size:.75rem;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600}
+td{padding:8px 12px;border-bottom:1px solid rgba(30,41,59,.5)}
+tr:hover td{background:rgba(59,130,246,.03)}
+
+/* Brand Builder */
+.brand-form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.component-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(30,41,59,.3)}
+.component-label{font-size:.85rem;min-width:120px}
+.component-slider{display:flex;align-items:center;gap:8px;flex:1}
+.component-slider input[type=range]{flex:1;accent-color:var(--primary)}
+.component-slider .val{min-width:24px;text-align:center;font-weight:600;color:var(--primary)}
+
+/* Region inputs */
+.region-grid{display:grid;grid-template-columns:120px repeat(3,1fr);gap:8px;align-items:center}
+.region-grid .header{font-size:.75rem;color:var(--muted);text-transform:uppercase;font-weight:600}
+
+/* Scorecard */
+.scorecard-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.sc-item{background:var(--surface);border-radius:10px;padding:14px 18px;flex:1;min-width:140px;text-align:center}
+.sc-item .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.sc-item .score{font-size:1.6rem;font-weight:700}
+.sc-total .score{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* Leaderboard */
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border-radius:10px;margin-bottom:8px}
+.lb-rank{font-size:1.3rem;font-weight:700;min-width:32px;text-align:center}
+.lb-rank.gold{color:#fbbf24}.lb-rank.silver{color:#94a3b8}.lb-rank.bronze{color:#d97706}
+.lb-name{flex:1;font-weight:600}.lb-score{font-size:1.1rem;font-weight:700;color:var(--primary)}
+
+/* Submit bar */
+.submit-bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--border);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.submit-bar .status{font-size:.85rem;color:var(--muted)}
+.submit-bar .status.submitted{color:var(--green)}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:var(--muted)}
+
+/* Instructor panel */
+.instructor-panel{background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:16px;margin-bottom:20px}
+.instructor-panel h3{color:var(--accent)}
+
+@media(max-width:900px){.sidebar{width:60px}.sidebar-item span{display:none}.sidebar-label{display:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/dashboard.html" class="logo">🚴 MarketSim</a>
+    <div class="game-info">
+      <span id="gameName">Loading...</span>
+      <span class="code" id="gameCode">---</span>
+      <span class="quarter-badge" id="quarterBadge">Q0</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="teamName" style="font-size:.85rem;color:var(--muted)"></span>
+    <span id="cashDisplay" style="font-size:.85rem;font-weight:600;color:var(--green)"></span>
+    <button class="btn btn-outline btn-sm" onclick="window.location.href='/dashboard.html'">← Games</button>
+  </div>
+</div>
+
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Decisions</div>
+      <div class="sidebar-item active" data-tab="overview"><span>📊</span><span>Overview</span></div>
+      <div class="sidebar-item" data-tab="brands"><span>🚲</span><span>Brands</span></div>
+      <div class="sidebar-item" data-tab="pricing"><span>💲</span><span>Pricing</span></div>
+      <div class="sidebar-item" data-tab="advertising"><span>📣</span><span>Advertising</span></div>
+      <div class="sidebar-item" data-tab="salesforce"><span>👥</span><span>Sales Force</span></div>
+      <div class="sidebar-item" data-tab="distribution"><span>🏪</span><span>Distribution</span></div>
+      <div class="sidebar-item" data-tab="production"><span>🏭</span><span>Production</span></div>
+      <div class="sidebar-item" data-tab="rd"><span>🔬</span><span>R&D</span></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Reports</div>
+      <div class="sidebar-item" data-tab="results"><span>📈</span><span>Results</span></div>
+      <div class="sidebar-item" data-tab="financials"><span>💰</span><span>Financials</span></div>
+      <div class="sidebar-item" data-tab="research"><span>🔍</span><span>Market Research</span></div>
+      <div class="sidebar-item" data-tab="leaderboard"><span>🏆</span><span>Leaderboard</span></div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section" id="instructorNav" style="display:none">
+      <div class="sidebar-label">Instructor</div>
+      <div class="sidebar-item" data-tab="instructor"><span>👨‍🏫</span><span>Game Mgmt</span></div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn btn-green" style="width:100%" onclick="submitDecisions()" id="submitBtn">Submit Q<span id="submitQ">1</span></button>
+    </div>
+  </div>
+
+  <div class="main" id="mainContent">
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-content active" id="tab-overview">
+      <h2>📊 Quarter Overview</h2>
+      <div class="panel-grid" id="overviewStats">
+        <div class="stat-card"><div class="stat-label">Cash Balance</div><div class="stat-value" id="ovCash">$5,000,000</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue (Last Q)</div><div class="stat-value" id="ovRevenue">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Net Income (Last Q)</div><div class="stat-value" id="ovIncome">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Market Share</div><div class="stat-value" id="ovShare">0%</div></div>
+        <div class="stat-card"><div class="stat-label">Total Demand</div><div class="stat-value" id="ovDemand">0</div></div>
+        <div class="stat-card"><div class="stat-label">Balanced Scorecard</div><div class="stat-value" id="ovBSC">0.0</div></div>
+      </div>
+      <div class="panel" id="overviewTips">
+        <h3>💡 Getting Started</h3>
+        <p style="color:var(--muted);font-size:.9rem;line-height:1.6" id="tipText">Start by designing your first brand in the Brands tab. Then set pricing, plan your advertising, hire sales staff, and set up distribution. When ready, click Submit to lock in your decisions for this quarter.</p>
+      </div>
+    </div>
+
+    <!-- BRANDS TAB -->
+    <div class="tab-content" id="tab-brands">
+      <h2>🚲 Brand Management</h2>
+      <div class="panel">
+        <h3>Design a New Brand</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div><label style="font-size:.8rem;color:var(--muted)">Brand Name</label><input type="text" id="brandName" placeholder="e.g. Velocity Pro" style="width:100%;margin-top:4px"></div>
+          <div><label style="font-size:.8rem;color:var(--muted)">Target Segment</label><select id="brandSegment" style="width:100%;margin-top:4px"><option value="Worker">Worker</option><option value="Recreation">Recreation</option><option value="Youth">Youth</option><option value="Mountain">Mountain</option><option value="Speed">Speed</option></select></div>
+        </div>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Set component quality (0=None, 1=Basic, 5=Premium). Higher quality increases cost but improves brand appeal.</p>
+        <div id="componentSliders"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+          <div><span style="font-size:.85rem;color:var(--muted)">Est. Unit Cost: </span><strong id="estCost">$0</strong></div>
+          <button class="btn btn-primary" onclick="createBrand()">Create Brand</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Active Brands</h3>
+        <div id="brandList"><p style="color:var(--muted);font-size:.85rem">No brands yet. Design your first brand above.</p></div>
+      </div>
+    </div>
+
+    <!-- PRICING TAB -->
+    <div class="tab-content" id="tab-pricing">
+      <h2>💲 Pricing Strategy</h2>
+      <div class="panel">
+        <h3>Set Prices Per Brand & Region</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Prices are per unit in USD. Consider segment price sensitivity and competitor pricing.</p>
+        <div id="pricingTable"><p style="color:var(--muted);font-size:.85rem">Create brands first to set pricing.</p></div>
+      </div>
+    </div>
+
+    <!-- ADVERTISING TAB -->
+    <div class="tab-content" id="tab-advertising">
+      <h2>📣 Advertising & Marketing</h2>
+      <div class="panel">
+        <h3>Regional Media Spend</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Allocate quarterly advertising budget per region (in $). Target specific segments with your ads.</p>
+        <div class="region-grid">
+          <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
+          <div>Ad Budget</div>
+          <input type="number" id="ad_latam" value="0" min="0" step="10000" onchange="updateDecisions()">
+          <input type="number" id="ad_europe" value="0" min="0" step="10000" onchange="updateDecisions()">
+          <input type="number" id="ad_apac" value="0" min="0" step="10000" onchange="updateDecisions()">
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-size:.8rem;color:var(--muted)">Primary Ad Target Segment</label>
+          <select id="adTarget" style="margin-top:4px" onchange="updateDecisions()"><option value="Worker">Worker</option><option value="Recreation">Recreation</option><option value="Youth">Youth</option><option value="Mountain">Mountain</option><option value="Speed">Speed</option></select>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Internet Marketing</h3>
+        <div class="region-grid">
+          <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
+          <div>SEM Budget</div>
+          <input type="number" id="sem_latam" value="0" min="0" step="5000" onchange="updateDecisions()">
+          <input type="number" id="sem_europe" value="0" min="0" step="5000" onchange="updateDecisions()">
+          <input type="number" id="sem_apac" value="0" min="0" step="5000" onchange="updateDecisions()">
+        </div>
+      </div>
+    </div>
+
+    <!-- SALES FORCE TAB -->
+    <div class="tab-content" id="tab-salesforce">
+      <h2>👥 Sales Force Management</h2>
+      <div class="panel">
+        <h3>Headcount Per Region</h3>
+        <div class="region-grid">
+          <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
+          <div>Sales Reps</div>
+          <input type="number" id="sf_latam" value="2" min="0" max="50" onchange="updateDecisions()">
+          <input type="number" id="sf_europe" value="2" min="0" max="50" onchange="updateDecisions()">
+          <input type="number" id="sf_apac" value="1" min="0" max="50" onchange="updateDecisions()">
+          <div>Salary ($)</div>
+          <input type="number" id="sfsal_latam" value="40000" min="20000" step="5000" onchange="updateDecisions()">
+          <input type="number" id="sfsal_europe" value="50000" min="20000" step="5000" onchange="updateDecisions()">
+          <input type="number" id="sfsal_apac" value="35000" min="20000" step="5000" onchange="updateDecisions()">
+          <div>Commission %</div>
+          <input type="number" id="sfcom_latam" value="5" min="0" max="20" onchange="updateDecisions()">
+          <input type="number" id="sfcom_europe" value="5" min="0" max="20" onchange="updateDecisions()">
+          <input type="number" id="sfcom_apac" value="5" min="0" max="20" onchange="updateDecisions()">
+        </div>
+      </div>
+    </div>
+
+    <!-- DISTRIBUTION TAB -->
+    <div class="tab-content" id="tab-distribution">
+      <h2>🏪 Distribution Channels</h2>
+      <div class="panel">
+        <h3>Sales Outlets Per Region</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Each outlet costs ~$50,000/quarter to operate. More outlets = wider reach.</p>
+        <div class="region-grid">
+          <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
+          <div>Outlets</div>
+          <input type="number" id="dist_latam" value="1" min="0" max="20" onchange="updateDecisions()">
+          <input type="number" id="dist_europe" value="1" min="0" max="20" onchange="updateDecisions()">
+          <input type="number" id="dist_apac" value="0" min="0" max="20" onchange="updateDecisions()">
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTION TAB -->
+    <div class="tab-content" id="tab-production">
+      <h2>🏭 Production Planning</h2>
+      <div class="panel">
+        <h3>Units to Produce Per Brand</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Set production quantity for each active brand. Overproduction wastes money; underproduction means lost sales (stockouts).</p>
+        <div id="productionTable"><p style="color:var(--muted);font-size:.85rem">Create brands first to plan production.</p></div>
+      </div>
+    </div>
+
+    <!-- R&D TAB -->
+    <div class="tab-content" id="tab-rd">
+      <h2>🔬 Research & Development</h2>
+      <div class="panel">
+        <h3>R&D Investment</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Invest in R&D to unlock new component improvements. Typical investment: $200K-$1M per quarter.</p>
+        <div style="display:flex;gap:12px;align-items:end">
+          <div style="flex:1"><label style="font-size:.8rem;color:var(--muted)">R&D Budget This Quarter ($)</label><input type="number" id="rdBudget" value="250000" min="0" step="50000" style="width:100%;margin-top:4px" onchange="updateDecisions()"></div>
+        </div>
+        <div style="margin-top:12px"><label style="font-size:.8rem;color:var(--muted)">Cumulative R&D Investment:</label> <strong id="rdCumulative">$0</strong></div>
+      </div>
+      <div class="panel">
+        <h3>Dividend to Corporate</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Optional: Return profits to corporate HQ.</p>
+        <input type="number" id="dividend" value="0" min="0" step="50000" onchange="updateDecisions()">
+      </div>
+    </div>
+
+    <!-- RESULTS TAB -->
+    <div class="tab-content" id="tab-results">
+      <h2>📈 Quarterly Results</h2>
+      <div id="resultsContent"><p style="color:var(--muted)">Results will appear after the first quarter is processed.</p></div>
+    </div>
+
+    <!-- FINANCIALS TAB -->
+    <div class="tab-content" id="tab-financials">
+      <h2>💰 Financial Statements</h2>
+      <div id="financialsContent"><p style="color:var(--muted)">Financial data will appear after the first quarter is processed.</p></div>
+    </div>
+
+    <!-- MARKET RESEARCH TAB -->
+    <div class="tab-content" id="tab-research">
+      <h2>🔍 Market Research</h2>
+      <div id="researchContent"><p style="color:var(--muted)">Market research data will be available after the first quarter.</p></div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div class="tab-content" id="tab-leaderboard">
+      <h2>🏆 Leaderboard</h2>
+      <div id="leaderboardContent"><p style="color:var(--muted)">Rankings will appear after the first quarter is processed.</p></div>
+    </div>
+
+    <!-- INSTRUCTOR TAB -->
+    <div class="tab-content" id="tab-instructor">
+      <h2>👨‍🏫 Game Management</h2>
+      <div class="instructor-panel">
+        <h3>⚡ Advance Quarter</h3>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Process all team decisions and advance to the next quarter.</p>
+        <div id="advanceInfo" style="margin-bottom:12px"></div>
+        <button class="btn btn-primary" onclick="advanceQuarter()" id="advanceBtn">Advance to Next Quarter</button>
+      </div>
+      <div class="panel">
+        <h3>Teams Overview</h3>
+        <div id="instructorTeams"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="submit-bar">
+  <div class="status" id="submitStatus">Editing decisions...</div>
+  <div style="display:flex;gap:12px;align-items:center">
+    <button class="btn btn-outline btn-sm" onclick="saveDecisions()">💾 Save Draft</button>
+    <button class="btn btn-green" onclick="submitDecisions()">✅ Submit Quarter</button>
+  </div>
+</div>
+
+<script>
+const API=window.location.origin;
+const gameId=new URLSearchParams(location.search).get('game');
+let user=null,game=null,team=null,brands=[],decisions={},results=null;
+
+const COMPONENTS=['frame','wheels','drivetrain','brakes','suspension','seat','handlebars','electronics'];
+const COMPONENT_LABELS={frame:'🖼️ Frame',wheels:'🔵 Wheels',drivetrain:'⚙️ Drivetrain',brakes:'🛑 Brakes',suspension:'🔧 Suspension',seat:'💺 Seat',handlebars:'🎯 Handlebars',electronics:'💡 Electronics'};
+const REGIONS=['LATAM','Europe','APAC'];
+
+async function apiFetch(url,opts={}){
+  const token=localStorage.getItem('token');
+  const headers={'Content-Type':'application/json'};
+  if(token)headers['Authorization']='Bearer '+token;
+  const res=await fetch(API+url,{...opts,headers});
+  return res.json();
+}
+
+// Init component sliders
+function initSliders(){
+  const container=document.getElementById('componentSliders');
+  container.innerHTML=COMPONENTS.map(c=>`
+    <div class="component-row">
+      <div class="component-label">${COMPONENT_LABELS[c]}</div>
+      <div class="component-slider">
+        <input type="range" min="0" max="5" value="3" id="comp_${c}" oninput="document.getElementById('compval_${c}').textContent=this.value;updateEstCost()">
+        <div class="val" id="compval_${c}">3</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateEstCost(){
+  let cost=50;
+  COMPONENTS.forEach(c=>{const v=parseInt(document.getElementById('comp_'+c).value);cost+=v*v*8+v*15});
+  document.getElementById('estCost').textContent='$'+cost.toLocaleString();
+}
+
+// Tab navigation
+document.querySelectorAll('.sidebar-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+item.dataset.tab).classList.add('active');
+  });
+});
+
+async function init(){
+  if(!gameId)return window.location.href='/dashboard.html';
+  const authData=await apiFetch('/api/auth/me');
+  if(!authData.user)return window.location.href='/index.html';
+  user=authData.user;
+
+  const gameData=await apiFetch('/api/game/details?game_id='+gameId);
+  if(gameData.error)return alert(gameData.error);
+  game=gameData.game;
+  team=gameData.team;
+  brands=gameData.brands||[];
+
+  document.getElementById('gameName').textContent=game.name||'Game';
+  document.getElementById('gameCode').textContent=game.code;
+  document.getElementById('quarterBadge').textContent=game.current_quarter===0?'Lobby':'Q'+game.current_quarter;
+  document.getElementById('submitQ').textContent=game.current_quarter||1;
+  if(team){
+    document.getElementById('teamName').textContent=(team.logo_emoji||'🏢')+' '+team.name;
+    document.getElementById('cashDisplay').textContent='$'+Number(team.cash_balance||5000000).toLocaleString();
+  }
+
+  // Show instructor tab
+  if(game.instructor_id===user.id||user.is_admin){
+    document.getElementById('instructorNav').style.display='';
+    loadInstructorPanel();
+  }
+
+  initSliders();
+  updateEstCost();
+  loadDecisions();
+  loadBrandList();
+  loadResults();
+  loadLeaderboard();
+  loadResearch();
+}
+
+function loadBrandList(){
+  const container=document.getElementById('brandList');
+  if(!brands.length){container.innerHTML='<p style="color:var(--muted);font-size:.85rem">No brands yet.</p>';return}
+  container.innerHTML=`<table><thead><tr><th>Brand</th><th>Segment</th><th>Quality</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>${
+    brands.map(b=>`<tr><td><strong>${esc(b.name)}</strong></td><td>${b.target_segment}</td><td>${(b.overall_quality||0).toFixed(1)}</td><td>$${Number(b.unit_cost||0).toLocaleString()}</td><td>${b.is_active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--muted)">Inactive</span>'}</td></tr>`).join('')
+  }</tbody></table>`;
+  updatePricingTable();
+  updateProductionTable();
+}
+
+function updatePricingTable(){
+  if(!brands.length)return;
+  const container=document.getElementById('pricingTable');
+  container.innerHTML=`<div class="region-grid" style="grid-template-columns:150px repeat(3,1fr)">
+    <div class="header">Brand</div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
+    ${brands.filter(b=>b.is_active).map(b=>`
+      <div>${esc(b.name)}</div>
+      ${REGIONS.map(r=>`<input type="number" id="price_${b.id}_${r}" value="${getDecisionPrice(b.id,r)}" min="200" max="3000" step="10" onchange="updateDecisions()">`).join('')}
+    `).join('')}
+  </div>`;
+}
+
+function updateProductionTable(){
+  if(!brands.length)return;
+  const container=document.getElementById('productionTable');
+  container.innerHTML=`<table><thead><tr><th>Brand</th><th>Units to Produce</th><th>Est. Cost/Unit</th><th>Total Cost</th></tr></thead><tbody>${
+    brands.filter(b=>b.is_active).map(b=>`<tr>
+      <td><strong>${esc(b.name)}</strong></td>
+      <td><input type="number" id="prod_${b.id}" value="${getDecisionProd(b.id)}" min="0" max="50000" step="100" onchange="updateDecisions()" style="width:120px"></td>
+      <td>$${Number(b.unit_cost||0).toLocaleString()}</td>
+      <td id="prodtotal_${b.id}">$0</td>
+    </tr>`).join('')
+  }</tbody></table>`;
+}
+
+function getDecisionPrice(brandId,region){return decisions?.pricing?.[brandId]?.[region]||900}
+function getDecisionProd(brandId){return decisions?.production?.[brandId]||500}
+
+function collectDecisions(){
+  const d={pricing:{},advertising:{},internet_marketing:{},salesforce:{},distribution:{},rd_budget:parseInt(document.getElementById('rdBudget').value)||0,production:{},dividend:parseInt(document.getElementById('dividend').value)||0};
+  brands.filter(b=>b.is_active).forEach(b=>{
+    d.pricing[b.id]={};d.production[b.id]=parseInt(document.getElementById('prod_'+b.id)?.value)||0;
+    REGIONS.forEach(r=>{d.pricing[b.id][r]=parseInt(document.getElementById(`price_${b.id}_${r}`)?.value)||900});
+  });
+  d.advertising={latam:parseInt(document.getElementById('ad_latam').value)||0,europe:parseInt(document.getElementById('ad_europe').value)||0,apac:parseInt(document.getElementById('ad_apac').value)||0,target:document.getElementById('adTarget').value};
+  d.internet_marketing={latam:parseInt(document.getElementById('sem_latam').value)||0,europe:parseInt(document.getElementById('sem_europe').value)||0,apac:parseInt(document.getElementById('sem_apac').value)||0};
+  d.salesforce={};
+  REGIONS.forEach(r=>{const rl=r.toLowerCase();d.salesforce[rl]={count:parseInt(document.getElementById('sf_'+rl).value)||0,salary:parseInt(document.getElementById('sfsal_'+rl).value)||0,commission:parseInt(document.getElementById('sfcom_'+rl).value)||0}});
+  d.distribution={latam:parseInt(document.getElementById('dist_latam').value)||0,europe:parseInt(document.getElementById('dist_europe').value)||0,apac:parseInt(document.getElementById('dist_apac').value)||0};
+  return d;
+}
+
+function updateDecisions(){decisions=collectDecisions()}
+
+async function saveDecisions(){
+  decisions=collectDecisions();
+  const data=await apiFetch('/api/simulation/submit-decisions',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,quarter:game.current_quarter,decisions,submit:false})});
+  if(data.error)return alert(data.error);
+  document.getElementById('submitStatus').textContent='💾 Draft saved';
+}
+
+async function submitDecisions(){
+  if(!confirm('Submit your decisions for Q'+(game.current_quarter||1)+'? You won\'t be able to change them after.'))return;
+  decisions=collectDecisions();
+  const data=await apiFetch('/api/simulation/submit-decisions',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,quarter:game.current_quarter,decisions,submit:true})});
+  if(data.error)return alert(data.error);
+  document.getElementById('submitStatus').textContent='✅ Decisions submitted for Q'+(game.current_quarter||1);
+  document.getElementById('submitStatus').classList.add('submitted');
+}
+
+async function createBrand(){
+  const name=document.getElementById('brandName').value.trim();
+  const segment=document.getElementById('brandSegment').value;
+  if(!name)return alert('Please enter a brand name');
+  const components={};
+  COMPONENTS.forEach(c=>components[c]=parseInt(document.getElementById('comp_'+c).value));
+  const data=await apiFetch('/api/team/brands',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,name,target_segment:segment,components})});
+  if(data.error)return alert(data.error);
+  brands.push(data.brand);
+  document.getElementById('brandName').value='';
+  loadBrandList();
+}
+
+async function loadDecisions(){
+  if(!team||!game.current_quarter)return;
+  const data=await apiFetch(`/api/simulation/get-decisions?game_id=${gameId}&team_id=${team.id}&quarter=${game.current_quarter}`);
+  if(data.decisions){
+    decisions=data.decisions;
+    // Populate fields from saved decisions
+    if(decisions.advertising){
+      ['latam','europe','apac'].forEach(r=>{if(document.getElementById('ad_'+r))document.getElementById('ad_'+r).value=decisions.advertising[r]||0});
+      if(decisions.advertising.target)document.getElementById('adTarget').value=decisions.advertising.target;
+    }
+    if(decisions.internet_marketing){['latam','europe','apac'].forEach(r=>{if(document.getElementById('sem_'+r))document.getElementById('sem_'+r).value=decisions.internet_marketing[r]||0})}
+    if(decisions.salesforce){REGIONS.forEach(r=>{const rl=r.toLowerCase();const sf=decisions.salesforce[rl]||{};if(document.getElementById('sf_'+rl)){document.getElementById('sf_'+rl).value=sf.count||0;document.getElementById('sfsal_'+rl).value=sf.salary||40000;document.getElementById('sfcom_'+rl).value=sf.commission||5}})}
+    if(decisions.distribution){['latam','europe','apac'].forEach(r=>{if(document.getElementById('dist_'+r))document.getElementById('dist_'+r).value=decisions.distribution[r]||0})}
+    if(decisions.rd_budget)document.getElementById('rdBudget').value=decisions.rd_budget;
+    if(decisions.dividend)document.getElementById('dividend').value=decisions.dividend;
+  }
+}
+
+async function loadResults(){
+  if(!team||game.current_quarter<2)return;
+  const data=await apiFetch(`/api/simulation/get-results?game_id=${gameId}&team_id=${team.id}&quarter=${game.current_quarter-1}`);
+  if(!data.results)return;
+  results=data.results;
+  const r=results;
+  document.getElementById('ovCash').textContent='$'+Number(r.ending_cash||0).toLocaleString();
+  document.getElementById('ovRevenue').textContent='$'+Number(r.revenue||0).toLocaleString();
+  document.getElementById('ovIncome').textContent='$'+Number(r.net_income||0).toLocaleString();
+  document.getElementById('ovIncome').className='stat-value '+((r.net_income||0)>=0?'positive':'negative');
+  document.getElementById('ovShare').textContent=((r.market_share||0)*100).toFixed(1)+'%';
+  document.getElementById('ovDemand').textContent=Number(r.total_demand||0).toLocaleString();
+  document.getElementById('ovBSC').textContent=(r.balanced_scorecard||0).toFixed(2);
+
+  // Results tab
+  document.getElementById('resultsContent').innerHTML=`
+    <div class="scorecard-bar">
+      <div class="sc-item sc-total"><div class="label">Total Score</div><div class="score">${(r.balanced_scorecard||0).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Financial</div><div class="score">${(r.financial_performance||0).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Market</div><div class="score">${(r.market_performance||0).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Mktg Effect.</div><div class="score">${(r.marketing_effectiveness||0).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Investment</div><div class="score">${(r.investment_future||0).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Wealth</div><div class="score">${(r.wealth_creation||0).toFixed(2)}</div></div>
+    </div>
+    <div class="panel"><h3>Q${game.current_quarter-1} Performance</h3>
+      <div class="panel-grid">
+        <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">$${Number(r.revenue||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">COGS</div><div class="stat-value">$${Number(r.total_cogs||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-value">$${Number(r.total_expenses||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Net Income</div><div class="stat-value ${(r.net_income||0)>=0?'positive':'negative'}">$${Number(r.net_income||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Units Sold</div><div class="stat-value">${Number(r.units_sold||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Stockouts</div><div class="stat-value ${(r.stockouts||0)>0?'negative':''}">${r.stockouts||0}</div></div>
+      </div>
+    </div>`;
+
+  // Financials tab
+  document.getElementById('financialsContent').innerHTML=`
+    <div class="panel"><h3>Income Statement — Q${game.current_quarter-1}</h3>
+      <table><tbody>
+        <tr><td>Revenue</td><td style="text-align:right">$${N(r.revenue)}</td></tr>
+        <tr><td>Cost of Goods Sold</td><td style="text-align:right">($${N(r.total_cogs)})</td></tr>
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Gross Profit</td><td style="text-align:right">$${N((r.revenue||0)-(r.total_cogs||0))}</td></tr>
+        <tr><td>Operating Expenses</td><td style="text-align:right">($${N(r.total_expenses)})</td></tr>
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Net Income</td><td style="text-align:right;color:${(r.net_income||0)>=0?'var(--green)':'var(--red)'}">$${N(r.net_income)}</td></tr>
+      </tbody></table>
+    </div>
+    <div class="panel"><h3>Cash Flow</h3>
+      <table><tbody>
+        <tr><td>Starting Cash</td><td style="text-align:right">$${N(r.starting_cash)}</td></tr>
+        <tr><td>Cash from Operations</td><td style="text-align:right">$${N(r.cash_from_operations)}</td></tr>
+        <tr style="font-weight:700"><td>Ending Cash</td><td style="text-align:right;color:var(--green)">$${N(r.ending_cash)}</td></tr>
+      </tbody></table>
+    </div>`;
+}
+
+async function loadLeaderboard(){
+  if(game?.current_quarter<2)return;
+  const data=await apiFetch(`/api/simulation/leaderboard?game_id=${gameId}`);
+  if(!data.leaderboard)return;
+  const container=document.getElementById('leaderboardContent');
+  container.innerHTML=data.leaderboard.map((t,i)=>{
+    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    return `<div class="lb-row"><div class="lb-rank ${rankClass}">#${i+1}</div><div class="lb-name">${(t.logo_emoji||'🏢')+' '+esc(t.name)}</div><div class="lb-score">${(t.cumulative_scorecard||0).toFixed(2)}</div></div>`;
+  }).join('');
+}
+
+async function loadResearch(){
+  if(!team||game?.current_quarter<2)return;
+  const data=await apiFetch(`/api/simulation/market-research?game_id=${gameId}&quarter=${game.current_quarter-1}`);
+  if(!data.research)return;
+  const r=data.research;
+  document.getElementById('researchContent').innerHTML=`
+    <div class="panel"><h3>Segment Demand — Q${game.current_quarter-1}</h3>
+      <p style="color:var(--muted);font-size:.85rem">${JSON.stringify(r.segment_demands||{},null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;')}</p>
+    </div>
+    <div class="panel"><h3>Market Trends</h3>
+      <p style="color:var(--muted);font-size:.85rem">${JSON.stringify(r.market_trends||{},null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;')}</p>
+    </div>`;
+}
+
+async function loadInstructorPanel(){
+  const data=await apiFetch('/api/game/details?game_id='+gameId);
+  const teams=data.teams||[];
+  const submitted=teams.filter(t=>t.has_submitted).length;
+  document.getElementById('advanceInfo').innerHTML=`<p style="font-size:.9rem">${submitted}/${teams.length} teams have submitted. Quarter: ${game.current_quarter}/8</p>`;
+  document.getElementById('instructorTeams').innerHTML=teams.length?`<table><thead><tr><th>Team</th><th>Cash</th><th>Submitted</th><th>Members</th></tr></thead><tbody>${
+    teams.map(t=>`<tr><td>${(t.logo_emoji||'🏢')+' '+esc(t.name)}</td><td>$${N(t.cash_balance)}</td><td>${t.has_submitted?'<span style="color:var(--green)">✅ Yes</span>':'<span style="color:var(--yellow)">⏳ No</span>'}</td><td>${t.member_count||'?'}</td></tr>`).join('')
+  }</tbody></table>`:'<p style="color:var(--muted)">No teams yet</p>';
+}
+
+async function advanceQuarter(){
+  if(!confirm(`Advance from Q${game.current_quarter} to Q${game.current_quarter+1}? This will process all decisions.`))return;
+  document.getElementById('advanceBtn').disabled=true;
+  document.getElementById('advanceBtn').textContent='Processing...';
+  const data=await apiFetch('/api/game/advance',{method:'POST',body:JSON.stringify({game_id:gameId})});
+  if(data.error){alert(data.error);document.getElementById('advanceBtn').disabled=false;document.getElementById('advanceBtn').textContent='Advance to Next Quarter';return}
+  alert('Quarter advanced! Reloading...');
+  location.reload();
+}
+
+function N(v){return Number(v||0).toLocaleString()}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+init();
+</script>
+</body>
+</html>

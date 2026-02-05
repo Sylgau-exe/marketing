@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — MarketSim Live</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#111827;--border:#1e293b;--primary:#3b82f6;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--surface:#1e293b}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.btn{padding:8px 20px;border-radius:8px;border:none;font-weight:600;font-size:.85rem;transition:all .2s;cursor:pointer;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:6px 14px;font-size:.8rem}
+nav{display:flex;justify-content:space-between;align-items:center;padding:16px 40px;border-bottom:1px solid var(--border)}
+.logo{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none}
+.container{max-width:1200px;margin:0 auto;padding:32px 40px}
+h1{font-size:1.8rem;margin-bottom:24px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.stat .num{font-size:2rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat .label{font-size:.8rem;color:var(--muted);margin-top:4px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.panel h3{font-size:1.1rem;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:8px 12px;color:var(--muted);font-size:.75rem;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid rgba(30,41,59,.3)}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/dashboard.html" class="logo">🚴 MarketSim Live — Admin</a>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span id="userName" style="color:var(--muted);font-size:.9rem"></span>
+    <a href="/dashboard.html" class="btn btn-outline btn-sm">Dashboard</a>
+    <button class="btn btn-outline btn-sm" onclick="localStorage.removeItem('token');location.href='/index.html'">Logout</button>
+  </div>
+</nav>
+<div class="container">
+  <h1>👨‍🏫 Admin Panel</h1>
+  <div class="stats-grid" id="stats"></div>
+  <div class="panel">
+    <h3>All Users</h3>
+    <div id="usersTable"></div>
+  </div>
+  <div class="panel">
+    <h3>All Games</h3>
+    <div id="gamesTable"></div>
+  </div>
+</div>
+<script>
+const API=window.location.origin;
+async function apiFetch(url,opts={}){const token=localStorage.getItem('token');const headers={'Content-Type':'application/json'};if(token)headers['Authorization']='Bearer '+token;return(await fetch(API+url,{...opts,headers})).json()}
+async function init(){
+  const auth=await apiFetch('/api/auth/me');
+  if(!auth.user||(!auth.user.is_admin&&!auth.user.is_instructor))return location.href='/dashboard.html';
+  document.getElementById('userName').textContent=auth.user.name;
+  const stats=await apiFetch('/api/admin/stats');
+  if(stats.stats){const s=stats.stats;document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="num">${s.total_users||0}</div><div class="label">Users</div></div>
+    <div class="stat"><div class="num">${s.total_games||0}</div><div class="label">Games</div></div>
+    <div class="stat"><div class="num">${s.active_games||0}</div><div class="label">Active Games</div></div>
+    <div class="stat"><div class="num">${s.total_teams||0}</div><div class="label">Teams</div></div>`}
+  const users=await apiFetch('/api/admin/users');
+  if(users.users)document.getElementById('usersTable').innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead><tbody>${
+    users.users.map(u=>`<tr><td>${u.name}</td><td>${u.email}</td><td>${u.is_admin?'Admin':u.is_instructor?'Instructor':'Student'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+init();
+</script>
+</body>
+</html>
