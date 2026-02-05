@@ -1,4 +1,4 @@
-// api/auth/me.js (adapted to use db.js like BizSimHub)
+// api/auth/me.js
 import { sql } from '@vercel/postgres';
 import { requireAuth, cors } from '../../lib/auth.js';
 import { UserDB } from '../../lib/db.js';
@@ -15,9 +15,16 @@ export default async function handler(req, res) {
     const user = await UserDB.findById(decoded.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const assessments = await sql`
-      SELECT COUNT(*) as count FROM assessment_results WHERE user_id = ${user.id}
-    `;
+    // Count games this user is part of
+    let gameCount = 0;
+    try {
+      const games = await sql`
+        SELECT COUNT(*) as count FROM team_members WHERE user_id = ${user.id}
+      `;
+      gameCount = parseInt(games.rows[0].count);
+    } catch (e) {
+      // Table may not exist yet, default to 0
+    }
 
     return res.status(200).json({
       user: {
@@ -27,9 +34,10 @@ export default async function handler(req, res) {
         organization: user.organization,
         jobTitle: user.job_title,
         isAdmin: user.is_admin,
+        isInstructor: user.is_instructor,
         authProvider: user.auth_provider,
         createdAt: user.created_at,
-        assessmentCount: parseInt(assessments.rows[0].count)
+        gameCount
       }
     });
   } catch (error) {
