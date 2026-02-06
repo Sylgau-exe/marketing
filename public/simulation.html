@@ -431,11 +431,14 @@ function initSliders(){
     <div class="component-row">
       <div class="component-label">${COMPONENT_LABELS[c]}</div>
       <div class="component-slider">
+        <span style="font-size:.65rem;color:var(--muted);min-width:12px">0</span>
         <input type="range" min="0" max="5" value="3" id="comp_${c}" oninput="document.getElementById('compval_${c}').textContent=this.value;updateEstCost()">
+        <span style="font-size:.65rem;color:var(--muted);min-width:12px">5</span>
         <div class="val" id="compval_${c}">3</div>
       </div>
     </div>
   `).join('');
+  container.insertAdjacentHTML('beforeend','<p style="font-size:.7rem;color:var(--muted);margin-top:6px">0=None · 1=Basic · 2=Budget · 3=Standard · 4=Premium · 5=Ultra</p>');
 }
 
 function updateEstCost(){
@@ -562,8 +565,10 @@ function setupScenarioDefaults(){
 
 function loadBrandList(){
   const container=document.getElementById('brandList');
-  if(!brands.length){container.innerHTML='<p style="color:var(--muted);font-size:.85rem">No brands yet.</p>';return}
-  container.innerHTML=`<table><thead><tr><th>Brand</th><th>Segment</th><th>Quality</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>${
+  if(!brands.length){container.innerHTML='<p style="color:var(--muted);font-size:.85rem">No brands yet. Design your first brand above!</p>';return}
+  container.innerHTML=`<h4 style="margin:0 0 6px">Active Brands</h4>
+    <p style="font-size:.7rem;color:var(--muted);margin:0 0 8px">🔒 Brands are locked once created. Use R&D investment to improve products over time. You can create additional brands targeting different segments.</p>
+    <table><thead><tr><th>Brand</th><th>Segment</th><th>Quality</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>${
     brands.map(b=>{const segName=(COMPONENT_LABELS.segments||{})[b.target_segment]||b.target_segment;return `<tr><td><strong>${esc(b.name)}</strong></td><td>${segName}</td><td>${(b.overall_quality||0).toFixed(1)}</td><td>$${Number(b.unit_cost||0).toLocaleString()}</td><td>${b.is_active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--muted)">Inactive</span>'}</td></tr>`}).join('')
   }</tbody></table>`;
   updatePricingTable();
@@ -594,13 +599,22 @@ function updateProductionTable(){
   if(!brands.length)return;
   const container=document.getElementById('productionTable');
   container.innerHTML=`<table><thead><tr><th>Brand</th><th>Units to Produce</th><th>Est. Cost/Unit</th><th>Total Cost</th></tr></thead><tbody>${
-    brands.filter(b=>b.is_active).map(b=>`<tr>
+    brands.filter(b=>b.is_active).map(b=>{
+      const units=getDecisionProd(b.id);
+      const cost=parseFloat(b.unit_cost)||0;
+      return `<tr>
       <td><strong>${esc(b.name)}</strong></td>
-      <td><input type="number" id="prod_${b.id}" value="${getDecisionProd(b.id)}" min="0" max="50000" step="100" onchange="updateDecisions()" style="width:120px"></td>
-      <td>$${Number(b.unit_cost||0).toLocaleString()}</td>
-      <td id="prodtotal_${b.id}">$0</td>
-    </tr>`).join('')
+      <td><input type="number" id="prod_${b.id}" value="${units}" min="0" max="50000" step="100" onchange="updateProdTotal('${b.id}',${cost});updateDecisions()" oninput="updateProdTotal('${b.id}',${cost})" style="width:120px"></td>
+      <td>$${Number(cost).toLocaleString()}</td>
+      <td id="prodtotal_${b.id}">$${Number(units*cost).toLocaleString()}</td>
+    </tr>`;
+    }).join('')
   }</tbody></table>`;
+}
+function updateProdTotal(brandId,unitCost){
+  const units=parseInt(document.getElementById('prod_'+brandId)?.value)||0;
+  const el=document.getElementById('prodtotal_'+brandId);
+  if(el) el.textContent='$'+Number(units*unitCost).toLocaleString();
 }
 
 function getDecisionPrice(brandId,region){return decisions?.pricing?.[brandId]?.[region]||SUGGESTED.price}
@@ -670,17 +684,25 @@ async function createBrand(){
   if(!segment)return alert('Please select a target segment');
   if(!team?.id)return alert('No team found. Try refreshing the page.');
   
+  // Check for duplicate name
+  if(brands.some(b=>b.name.toLowerCase()===name.toLowerCase())){
+    return alert('You already have a brand called "'+name+'". Each brand needs a unique name.');
+  }
+  
   const components={};
   COMPONENTS.forEach(c=>components[c]=parseInt(document.getElementById('comp_'+c).value)||3);
   
   console.log('Creating brand:', {name, segment, components, team_id: team.id, game_id: gameId});
   
+  const btn=document.querySelector('[onclick="createBrand()"]');
+  if(btn){btn.disabled=true;btn.textContent='Creating...';}
+  
   const data=await apiFetch('/api/team/brands',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team.id,name,target_segment:segment,components})});
   
   console.log('Brand API response:', JSON.stringify(data));
   
-  if(data.error){alert('Error: '+data.error);return}
-  if(!data.brand){alert('Brand creation failed - no brand returned. Check console.');console.error('Full response:',data);return}
+  if(data.error){alert('Error: '+data.error);if(btn){btn.disabled=false;btn.textContent='Create Brand';}return}
+  if(!data.brand){alert('Brand creation failed - no brand returned. Check console.');console.error('Full response:',data);if(btn){btn.disabled=false;btn.textContent='Create Brand';}return}
   
   // Normalize brand properties (API returns camelCase, tables use snake_case)
   const b=data.brand;
@@ -695,7 +717,13 @@ async function createBrand(){
     b.handlebars_quality=b.components.handlebars;b.electronics_quality=b.components.electronics;
   }
   brands.push(b);
+  
+  // Reset the form for next brand
   document.getElementById('brandName').value='';
+  document.getElementById('brandName').placeholder='e.g. '+['Apex','Nova','Pulse','Zen','Spark','Blaze'][Math.floor(Math.random()*6)];
+  COMPONENTS.forEach(c=>{document.getElementById('comp_'+c).value=3;document.getElementById('compval_'+c).textContent='3';});
+  updateEstCost();
+  
   loadBrandList();
   
   // Also reload from server to ensure consistency
@@ -708,8 +736,7 @@ async function createBrand(){
   }catch(e){console.log('Brand refresh fallback failed:',e)}
   
   // Visual confirmation
-  const btn=document.querySelector('[onclick="createBrand()"]');
-  if(btn){const orig=btn.textContent;btn.textContent='✓ Brand Created!';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background=''},2000)}
+  if(btn){btn.textContent='✓ '+name+' Created!';btn.style.background='var(--green)';btn.disabled=false;setTimeout(()=>{btn.textContent='Create Brand';btn.style.background=''},2500)}
 }
 
 async function loadDecisions(){
