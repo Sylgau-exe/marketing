@@ -740,193 +740,238 @@ init();
   </div>
 </div>
 
-<!-- ===== GUIDED TOUR ===== -->
-<div id="tourOverlay" style="display:none">
-  <div id="tourBackdrop"></div>
-  <div id="tourPopup">
-    <div id="tourHeader">
-      <span id="tourStep">Step 1 of 8</span>
-      <button id="tourClose" onclick="closeTour()">✕</button>
+<!-- ===== INTERACTIVE STEP-BY-STEP GUIDE ===== -->
+<div id="guideBar" style="display:none">
+  <div id="guideBarProgress"><div id="guideBarProgressFill"></div></div>
+  <div id="guideBarContent">
+    <div id="guideBarLeft">
+      <span id="guideBarIcon"></span>
+      <div id="guideBarText">
+        <div id="guideBarLabel"></div>
+        <div id="guideBarDesc"></div>
+      </div>
     </div>
-    <div id="tourIcon"></div>
-    <h3 id="tourTitle"></h3>
-    <p id="tourDesc"></p>
-    <div id="tourTip"></div>
-    <div id="tourFooter">
-      <button id="tourPrev" onclick="tourNav(-1)">← Back</button>
-      <div id="tourDots"></div>
-      <button id="tourNext" onclick="tourNav(1)">Next →</button>
+    <div id="guideBarRight">
+      <button id="guideBarPrev" onclick="guideNav(-1)">←</button>
+      <span id="guideBarCounter"></span>
+      <button id="guideBarNext" onclick="guideNav(1)">Next Step →</button>
+      <button id="guideBarClose" onclick="closeGuide()" title="Close guide">✕</button>
     </div>
   </div>
+  <div id="guideBarTip"></div>
 </div>
 
+<!-- Floating help button -->
+<button id="guideHelpBtn" onclick="startGuide()" title="Step-by-Step Guide">❓</button>
+
 <style>
-#tourBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9998;backdrop-filter:blur(2px)}
-#tourPopup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1a1f36,#0f172a);border:1px solid rgba(99,102,241,.4);border-radius:20px;padding:32px;max-width:480px;width:92%;z-index:9999;box-shadow:0 25px 60px rgba(0,0,0,.5),0 0 40px rgba(99,102,241,.15);animation:tourIn .3s ease}
-@keyframes tourIn{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
-#tourHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-#tourStep{font-size:.75rem;color:#818cf8;font-weight:600;text-transform:uppercase;letter-spacing:1px}
-#tourClose{background:none;border:none;color:#64748b;font-size:1.2rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .15s}
-#tourClose:hover{background:rgba(255,255,255,.1);color:white}
-#tourIcon{font-size:3rem;margin-bottom:12px}
-#tourTitle{color:white;font-size:1.35rem;margin:0 0 10px;font-weight:700}
-#tourDesc{color:#94a3b8;font-size:.95rem;line-height:1.6;margin:0 0 16px}
-#tourTip{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;font-size:.85rem;color:#a5b4fc;margin-bottom:20px;display:none}
-#tourTip::before{content:'💡 ';font-size:1rem}
-#tourFooter{display:flex;justify-content:space-between;align-items:center;gap:12px}
-#tourDots{display:flex;gap:6px}
-.tour-dot{width:8px;height:8px;border-radius:50%;background:#334155;transition:all .2s}
-.tour-dot.active{background:#6366f1;transform:scale(1.3)}
-.tour-dot.done{background:#4f46e5}
-#tourPrev,#tourNext{background:none;border:1px solid #334155;color:#94a3b8;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:500;transition:all .15s}
-#tourPrev:hover,#tourNext:hover{border-color:#6366f1;color:white}
-#tourNext{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white}
-#tourNext:hover{opacity:.9}
-#tourPrev:disabled{opacity:.3;pointer-events:none}
-#tourHelpBtn{position:fixed;bottom:24px;right:24px;z-index:100;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;width:48px;height:48px;border-radius:50%;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center}
-#tourHelpBtn:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(99,102,241,.5)}
+/* ── Guide Bar (fixed top, non-blocking) ── */
+#guideBar{
+  position:fixed;top:0;left:0;right:0;z-index:2000;
+  background:linear-gradient(135deg,#1a1f36 0%,#151929 100%);
+  border-bottom:1px solid rgba(99,102,241,.3);
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  animation:guideBarIn .3s ease;
+}
+@keyframes guideBarIn{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+
+#guideBarProgress{height:3px;background:#0f172a}
+#guideBarProgressFill{height:100%;background:linear-gradient(90deg,#6366f1,#a78bfa);transition:width .5s ease;width:0}
+
+#guideBarContent{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;gap:16px;
+}
+#guideBarLeft{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+#guideBarIcon{font-size:1.5rem;flex-shrink:0}
+#guideBarText{min-width:0}
+#guideBarLabel{color:white;font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#guideBarDesc{color:#94a3b8;font-size:.8rem;line-height:1.4;margin-top:2px}
+
+#guideBarRight{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#guideBarCounter{color:#64748b;font-size:.75rem;font-weight:600;min-width:36px;text-align:center}
+#guideBarPrev{background:none;border:1px solid #1e293b;color:#64748b;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:.9rem;transition:all .15s;display:flex;align-items:center;justify-content:center}
+#guideBarPrev:hover{border-color:#6366f1;color:white}
+#guideBarPrev:disabled{opacity:.2;pointer-events:none}
+#guideBarNext{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .15s;white-space:nowrap}
+#guideBarNext:hover{opacity:.9}
+#guideBarClose{background:none;border:none;color:#475569;font-size:1rem;cursor:pointer;padding:4px 6px;border-radius:4px;transition:all .15s}
+#guideBarClose:hover{color:#94a3b8;background:rgba(255,255,255,.05)}
+
+#guideBarTip{
+  display:none;padding:6px 20px 10px;
+  font-size:.78rem;color:#a5b4fc;line-height:1.4;
+  border-top:1px solid rgba(255,255,255,.03);
+  background:rgba(99,102,241,.04);
+}
+#guideBarTip::before{content:'💡 '}
+
+/* Push page content down when guide is visible */
+#guideBar[style*="display: flex"] ~ .layout,
+#guideBar:not([style*="display: none"]):not([style*="display:none"]) ~ .layout{
+  margin-top:0;
+}
+body.guide-active{padding-top:85px}
+body.guide-active.guide-tip-visible{padding-top:110px}
+
+/* ── Help button ── */
+#guideHelpBtn{
+  position:fixed;bottom:24px;right:24px;z-index:100;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;
+  width:48px;height:48px;border-radius:50%;font-size:1.3rem;cursor:pointer;
+  box-shadow:0 4px 15px rgba(99,102,241,.4);transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+}
+#guideHelpBtn:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(99,102,241,.5)}
+
+/* ── Highlight active tab in sidebar during guide ── */
+body.guide-active .sidebar-item.guide-highlight{
+  background:rgba(99,102,241,.15);
+  border-left-color:#8b5cf6;
+  animation:guideGlow 2s ease-in-out infinite;
+}
+@keyframes guideGlow{0%,100%{box-shadow:none}50%{box-shadow:inset 0 0 12px rgba(99,102,241,.15)}}
+
+/* ── Mobile ── */
+@media(max-width:600px){
+  #guideBarContent{padding:8px 12px;gap:10px}
+  #guideBarDesc{display:none}
+  #guideBarNext{padding:6px 12px;font-size:.78rem}
+  body.guide-active{padding-top:55px}
+}
 </style>
 
-<!-- Floating help button -->
-<button id="tourHelpBtn" onclick="startTour()" title="Guided Tour">❓</button>
-
 <script>
-const TOUR_STEPS=[
+const GUIDE_STEPS=[
   {
-    icon:'🎯',
-    title:'Welcome to Your Simulation!',
-    desc:'You\'re the marketing director of a tech company. Each quarter, you\'ll make strategic decisions — then see how you perform against AI competitors.',
-    tip:'This simulation has 8 quarters. Each quarter, you\'ll go through these tabs from left to right, then submit.',
-    tab:null
+    icon:'🎯',title:'Welcome — Review the Overview',
+    desc:'You\'re the marketing director. Look over your company overview, then click Next Step when ready.',
+    tip:'This simulation runs 8 quarters. Each quarter, go through these steps from left to right, then submit your decisions.',
+    tab:'overview'
   },
   {
-    icon:'🏷️',
-    title:'Step 1: Create Your Brand',
-    desc:'Start by designing a product. Give it a name, pick a target customer segment, and set the quality of each component using the sliders.',
-    tip:'Higher quality = better appeal but higher cost. Find the sweet spot for your target segment.',
+    icon:'🏷️',title:'Create Your First Brand',
+    desc:'Name your product, pick a target segment, adjust component quality, then click "Create Brand".',
+    tip:'Higher quality = better appeal but higher unit cost. Check Est. Unit Cost before creating. You can make multiple brands later.',
     tab:'brands'
   },
   {
-    icon:'💲',
-    title:'Step 2: Set Your Prices',
-    desc:'Set a price for each of your brands in each region you operate in. Pricing affects demand, revenue, and how customers perceive your product.',
-    tip:'Check your unit cost first — price above it to make profit. Different segments have different price sensitivities.',
+    icon:'💲',title:'Set Your Prices',
+    desc:'Set a retail price for each brand in each region. Price above your unit cost to make profit.',
+    tip:'Budget segments are price-sensitive — keep prices low. Premium segments tolerate higher prices if quality matches.',
     tab:'pricing'
   },
   {
-    icon:'📣',
-    title:'Step 3: Advertising',
-    desc:'Allocate your advertising budget across regions. More spend = more awareness, but diminishing returns kick in at high levels.',
-    tip:'Focus your ad budget on regions and segments where you have the strongest products.',
+    icon:'📣',title:'Plan Your Advertising',
+    desc:'Set an ad budget per region and choose which segment to target with your ads.',
+    tip:'Focus ad budget where your strongest products are. A small spend ($50K–$200K) is much better than zero.',
     tab:'advertising'
   },
   {
-    icon:'👥',
-    title:'Step 4: Sales Force',
-    desc:'Hire salespeople in each region and set their compensation. More reps and better pay = more sales coverage.',
-    tip:'Salespeople take a quarter to become fully effective. Hire early and maintain your team.',
+    icon:'👥',title:'Hire Your Sales Force',
+    desc:'Set the number of sales reps and their compensation for each region.',
+    tip:'Reps take a quarter to ramp up fully. Hire early, maintain your team — turnover hurts performance.',
     tab:'salesforce'
   },
   {
-    icon:'🏪',
-    title:'Step 5: Distribution',
-    desc:'Choose distribution channels and allocate support budget per region. This determines where customers can buy your product.',
-    tip:'Different segments shop in different channels. Match your distribution to your target customers.',
+    icon:'🏪',title:'Set Up Distribution',
+    desc:'Allocate distribution support budget per region to get your products into stores and channels.',
+    tip:'Match distribution channels to where your target segment actually shops.',
     tab:'distribution'
   },
   {
-    icon:'🏭',
-    title:'Step 6: Production',
-    desc:'Decide how many units to produce for each brand. Too few = stockouts and missed sales. Too many = excess inventory costs.',
-    tip:'Look at last quarter\'s demand to estimate this quarter. Growing markets need more units each quarter.',
+    icon:'🏭',title:'Set Production Volume',
+    desc:'Decide how many units to produce for each brand. Balance supply with expected demand.',
+    tip:'For Q1, start with 500–2,000 units per brand. Adjust each quarter based on your results.',
     tab:'production'
   },
   {
-    icon:'🔬',
-    title:'Step 7: R&D Investment',
-    desc:'Invest in research to improve your product quality over time. R&D pays off in future quarters with better components.',
-    tip:'R&D is a long-term play. Early investment compounds. Don\'t neglect it.',
+    icon:'🔬',title:'Invest in R&D',
+    desc:'Set your research & development budget. R&D improves product quality over time.',
+    tip:'Even a small R&D budget ($50K–$200K/quarter) compounds significantly. Don\'t skip it.',
     tab:'rd'
   },
   {
-    icon:'🚀',
-    title:'Ready to Submit!',
-    desc:'Once you\'ve made all your decisions, hit the Submit button at the bottom. The engine will process your quarter against the AI competitors and show you the results.',
-    tip:'After submitting, check the Results, Financials, and Rankings tabs to see how you performed. Then start the next quarter!',
+    icon:'🚀',title:'Submit Your Quarter!',
+    desc:'Review everything on the Overview tab, then click "Submit Quarter" at the bottom. Results appear instantly!',
+    tip:'After submitting, check Results 📈, Financials 💰, and Rankings 🏆 to learn what worked.',
     tab:'overview'
   }
 ];
 
-let tourCurrent=0;
+let guideCurrent=0;
 
-function startTour(){
-  tourCurrent=0;
-  document.getElementById('tourOverlay').style.display='block';
-  renderTourStep();
+function startGuide(){
+  guideCurrent=0;
+  document.getElementById('guideBar').style.display='block';
+  document.getElementById('guideHelpBtn').style.display='none';
+  document.body.classList.add('guide-active');
+  renderGuide();
 }
 
-function closeTour(){
-  document.getElementById('tourOverlay').style.display='none';
-  try{localStorage.setItem('marketsim_tour_seen','1')}catch(e){}
+function closeGuide(){
+  document.getElementById('guideBar').style.display='none';
+  document.getElementById('guideHelpBtn').style.display='flex';
+  document.body.classList.remove('guide-active','guide-tip-visible');
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('guide-highlight'));
+  try{localStorage.setItem('marketsim_guide_seen','1')}catch(e){}
 }
 
-function tourNav(dir){
-  tourCurrent+=dir;
-  if(tourCurrent>=TOUR_STEPS.length){closeTour();return}
-  if(tourCurrent<0)tourCurrent=0;
-  renderTourStep();
+function guideNav(dir){
+  guideCurrent+=dir;
+  if(guideCurrent>=GUIDE_STEPS.length){closeGuide();return}
+  if(guideCurrent<0)guideCurrent=0;
+  renderGuide();
 }
 
-function renderTourStep(){
-  const s=TOUR_STEPS[tourCurrent];
-  document.getElementById('tourStep')
-    .textContent=tourCurrent===0?'Welcome':`Step ${tourCurrent} of ${TOUR_STEPS.length-1}`;
-  document.getElementById('tourIcon').textContent=s.icon;
-  document.getElementById('tourTitle').textContent=s.title;
-  document.getElementById('tourDesc').textContent=s.desc;
+function renderGuide(){
+  const s=GUIDE_STEPS[guideCurrent];
+  const total=GUIDE_STEPS.length;
 
-  const tipEl=document.getElementById('tourTip');
-  if(s.tip){tipEl.textContent=s.tip;tipEl.style.display='block'}
-  else{tipEl.style.display='none'}
+  // Progress bar
+  document.getElementById('guideBarProgressFill').style.width=((guideCurrent/(total-1))*100)+'%';
 
-  // Navigate to tab
+  // Content
+  document.getElementById('guideBarIcon').textContent=s.icon;
+  document.getElementById('guideBarLabel').textContent=s.title;
+  document.getElementById('guideBarDesc').textContent=s.desc;
+  document.getElementById('guideBarCounter').textContent=(guideCurrent+1)+' / '+total;
+
+  // Tip
+  const tipEl=document.getElementById('guideBarTip');
+  if(s.tip){tipEl.textContent=s.tip;tipEl.style.display='block';document.body.classList.add('guide-tip-visible')}
+  else{tipEl.style.display='none';document.body.classList.remove('guide-tip-visible')}
+
+  // Navigate to the correct tab
   if(s.tab){
-    document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(i=>{
+      i.classList.remove('active','guide-highlight');
+    });
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+
     const tabItem=document.querySelector(`.sidebar-item[data-tab="${s.tab}"]`);
-    if(tabItem)tabItem.classList.add('active');
+    if(tabItem){tabItem.classList.add('active','guide-highlight')}
     const tabContent=document.getElementById('tab-'+s.tab);
     if(tabContent)tabContent.classList.add('active');
   }
 
-  // Dots
-  const dotsEl=document.getElementById('tourDots');
-  dotsEl.innerHTML=TOUR_STEPS.map((_,i)=>
-    `<div class="tour-dot ${i===tourCurrent?'active':i<tourCurrent?'done':''}"></div>`
-  ).join('');
-
   // Buttons
-  document.getElementById('tourPrev').disabled=tourCurrent===0;
-  document.getElementById('tourNext').textContent=
-    tourCurrent===TOUR_STEPS.length-1?'Let\'s Go! 🚀':'Next →';
+  document.getElementById('guideBarPrev').disabled=guideCurrent===0;
+  const nextBtn=document.getElementById('guideBarNext');
+  if(guideCurrent===total-1){
+    nextBtn.textContent='Finish Guide ✓';
+  }else{
+    nextBtn.textContent='Done — Next Step →';
+  }
 }
 
-// Auto-show tour on first Q1 visit
-(function(){
-  const origInit=window._tourInitHook;
-  const checkTour=()=>{
-    try{
-      if(localStorage.getItem('marketsim_tour_seen'))return;
-    }catch(e){}
-    // Show after a short delay so the page loads
-    setTimeout(()=>{
-      if(game && game.current_quarter<=1)startTour();
-    },800);
-  };
-  // Hook into the existing init completion
-  const origOnload=window.onload;
-  window.addEventListener('load',()=>setTimeout(checkTour,1200));
-})();
+// Auto-show on first Q1 visit
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    try{if(localStorage.getItem('marketsim_guide_seen'))return}catch(e){}
+    if(game && game.current_quarter<=1)startGuide();
+  },1200);
+});
 </script>
 
 </body>
