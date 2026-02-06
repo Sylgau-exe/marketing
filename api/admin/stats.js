@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     } catch(e) {}
 
     try { teamCount = await sql`SELECT COUNT(*) as count FROM teams`; } catch(e) {}
-    try { decisionCount = await sql`SELECT COUNT(*) as count FROM decisions`; } catch(e) {}
+    try { decisionCount = await sql`SELECT COUNT(*) as count FROM quarterly_decisions`; } catch(e) {}
     try { newUsers7d = await sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`; } catch(e) {}
     try { newUsers30d = await sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '30 days'`; } catch(e) {}
 
