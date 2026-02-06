@@ -482,7 +482,7 @@ async function init(){
   if(gameData.error)return alert(gameData.error);
   game=gameData.game;
   team=gameData.team;
-  brands=gameData.brands||[];
+  brands=(gameData.brands||[]).map(b=>{b.is_active=b.is_active!==undefined?b.is_active:true;return b});
   // Set product-specific component labels based on scenario
   COMPONENT_LABELS=getComponentLabels(game.market_scenario);
   // Set scenario-specific regions and defaults
@@ -661,16 +661,27 @@ async function createBrand(){
   const name=document.getElementById('brandName').value.trim();
   const segment=document.getElementById('brandSegment').value;
   if(!name)return alert('Please enter a brand name');
+  if(!segment)return alert('Please select a target segment');
+  if(!team?.id)return alert('No team found. Try refreshing the page.');
+  
   const components={};
-  COMPONENTS.forEach(c=>components[c]=parseInt(document.getElementById('comp_'+c).value));
-  const data=await apiFetch('/api/team/brands',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,name,target_segment:segment,components})});
-  if(data.error)return alert(data.error);
+  COMPONENTS.forEach(c=>components[c]=parseInt(document.getElementById('comp_'+c).value)||3);
+  
+  console.log('Creating brand:', {name, segment, components, team_id: team.id, game_id: gameId});
+  
+  const data=await apiFetch('/api/team/brands',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team.id,name,target_segment:segment,components})});
+  
+  console.log('Brand API response:', JSON.stringify(data));
+  
+  if(data.error){alert('Error: '+data.error);return}
+  if(!data.brand){alert('Brand creation failed - no brand returned. Check console.');console.error('Full response:',data);return}
+  
   // Normalize brand properties (API returns camelCase, tables use snake_case)
   const b=data.brand;
-  b.is_active=b.isActive!==undefined?b.isActive:true;
-  b.target_segment=b.targetSegment||b.target_segment;
-  b.overall_quality=b.overallQuality||b.overall_quality||0;
-  b.unit_cost=b.unitCost||b.unit_cost||0;
+  b.is_active=true;
+  b.target_segment=b.targetSegment||b.target_segment||segment;
+  b.overall_quality=parseFloat(b.overallQuality||b.overall_quality||0);
+  b.unit_cost=parseFloat(b.unitCost||b.unit_cost||0);
   if(b.components){
     b.frame_quality=b.components.frame;b.wheels_quality=b.components.wheels;
     b.drivetrain_quality=b.components.drivetrain;b.brakes_quality=b.components.brakes;
@@ -680,6 +691,19 @@ async function createBrand(){
   brands.push(b);
   document.getElementById('brandName').value='';
   loadBrandList();
+  
+  // Also reload from server to ensure consistency
+  try{
+    const fresh=await apiFetch('/api/game/details?game_id='+gameId);
+    if(fresh.brands&&fresh.brands.length){
+      brands=fresh.brands.map(br=>{br.is_active=true;return br});
+      loadBrandList();
+    }
+  }catch(e){console.log('Brand refresh fallback failed:',e)}
+  
+  // Visual confirmation
+  const btn=document.querySelector('[onclick="createBrand()"]');
+  if(btn){const orig=btn.textContent;btn.textContent='✓ Brand Created!';btn.style.background='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.background=''},2000)}
 }
 
 async function loadDecisions(){
