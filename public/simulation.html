@@ -740,5 +740,194 @@ init();
   </div>
 </div>
 
+<!-- ===== GUIDED TOUR ===== -->
+<div id="tourOverlay" style="display:none">
+  <div id="tourBackdrop"></div>
+  <div id="tourPopup">
+    <div id="tourHeader">
+      <span id="tourStep">Step 1 of 8</span>
+      <button id="tourClose" onclick="closeTour()">✕</button>
+    </div>
+    <div id="tourIcon"></div>
+    <h3 id="tourTitle"></h3>
+    <p id="tourDesc"></p>
+    <div id="tourTip"></div>
+    <div id="tourFooter">
+      <button id="tourPrev" onclick="tourNav(-1)">← Back</button>
+      <div id="tourDots"></div>
+      <button id="tourNext" onclick="tourNav(1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<style>
+#tourBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9998;backdrop-filter:blur(2px)}
+#tourPopup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1a1f36,#0f172a);border:1px solid rgba(99,102,241,.4);border-radius:20px;padding:32px;max-width:480px;width:92%;z-index:9999;box-shadow:0 25px 60px rgba(0,0,0,.5),0 0 40px rgba(99,102,241,.15);animation:tourIn .3s ease}
+@keyframes tourIn{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+#tourHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+#tourStep{font-size:.75rem;color:#818cf8;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+#tourClose{background:none;border:none;color:#64748b;font-size:1.2rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .15s}
+#tourClose:hover{background:rgba(255,255,255,.1);color:white}
+#tourIcon{font-size:3rem;margin-bottom:12px}
+#tourTitle{color:white;font-size:1.35rem;margin:0 0 10px;font-weight:700}
+#tourDesc{color:#94a3b8;font-size:.95rem;line-height:1.6;margin:0 0 16px}
+#tourTip{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:12px 16px;font-size:.85rem;color:#a5b4fc;margin-bottom:20px;display:none}
+#tourTip::before{content:'💡 ';font-size:1rem}
+#tourFooter{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#tourDots{display:flex;gap:6px}
+.tour-dot{width:8px;height:8px;border-radius:50%;background:#334155;transition:all .2s}
+.tour-dot.active{background:#6366f1;transform:scale(1.3)}
+.tour-dot.done{background:#4f46e5}
+#tourPrev,#tourNext{background:none;border:1px solid #334155;color:#94a3b8;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:500;transition:all .15s}
+#tourPrev:hover,#tourNext:hover{border-color:#6366f1;color:white}
+#tourNext{background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white}
+#tourNext:hover{opacity:.9}
+#tourPrev:disabled{opacity:.3;pointer-events:none}
+#tourHelpBtn{position:fixed;bottom:24px;right:24px;z-index:100;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;width:48px;height:48px;border-radius:50%;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 15px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center}
+#tourHelpBtn:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(99,102,241,.5)}
+</style>
+
+<!-- Floating help button -->
+<button id="tourHelpBtn" onclick="startTour()" title="Guided Tour">❓</button>
+
+<script>
+const TOUR_STEPS=[
+  {
+    icon:'🎯',
+    title:'Welcome to Your Simulation!',
+    desc:'You\'re the marketing director of a tech company. Each quarter, you\'ll make strategic decisions — then see how you perform against AI competitors.',
+    tip:'This simulation has 8 quarters. Each quarter, you\'ll go through these tabs from left to right, then submit.',
+    tab:null
+  },
+  {
+    icon:'🏷️',
+    title:'Step 1: Create Your Brand',
+    desc:'Start by designing a product. Give it a name, pick a target customer segment, and set the quality of each component using the sliders.',
+    tip:'Higher quality = better appeal but higher cost. Find the sweet spot for your target segment.',
+    tab:'brands'
+  },
+  {
+    icon:'💲',
+    title:'Step 2: Set Your Prices',
+    desc:'Set a price for each of your brands in each region you operate in. Pricing affects demand, revenue, and how customers perceive your product.',
+    tip:'Check your unit cost first — price above it to make profit. Different segments have different price sensitivities.',
+    tab:'pricing'
+  },
+  {
+    icon:'📣',
+    title:'Step 3: Advertising',
+    desc:'Allocate your advertising budget across regions. More spend = more awareness, but diminishing returns kick in at high levels.',
+    tip:'Focus your ad budget on regions and segments where you have the strongest products.',
+    tab:'advertising'
+  },
+  {
+    icon:'👥',
+    title:'Step 4: Sales Force',
+    desc:'Hire salespeople in each region and set their compensation. More reps and better pay = more sales coverage.',
+    tip:'Salespeople take a quarter to become fully effective. Hire early and maintain your team.',
+    tab:'salesforce'
+  },
+  {
+    icon:'🏪',
+    title:'Step 5: Distribution',
+    desc:'Choose distribution channels and allocate support budget per region. This determines where customers can buy your product.',
+    tip:'Different segments shop in different channels. Match your distribution to your target customers.',
+    tab:'distribution'
+  },
+  {
+    icon:'🏭',
+    title:'Step 6: Production',
+    desc:'Decide how many units to produce for each brand. Too few = stockouts and missed sales. Too many = excess inventory costs.',
+    tip:'Look at last quarter\'s demand to estimate this quarter. Growing markets need more units each quarter.',
+    tab:'production'
+  },
+  {
+    icon:'🔬',
+    title:'Step 7: R&D Investment',
+    desc:'Invest in research to improve your product quality over time. R&D pays off in future quarters with better components.',
+    tip:'R&D is a long-term play. Early investment compounds. Don\'t neglect it.',
+    tab:'rd'
+  },
+  {
+    icon:'🚀',
+    title:'Ready to Submit!',
+    desc:'Once you\'ve made all your decisions, hit the Submit button at the bottom. The engine will process your quarter against the AI competitors and show you the results.',
+    tip:'After submitting, check the Results, Financials, and Rankings tabs to see how you performed. Then start the next quarter!',
+    tab:'overview'
+  }
+];
+
+let tourCurrent=0;
+
+function startTour(){
+  tourCurrent=0;
+  document.getElementById('tourOverlay').style.display='block';
+  renderTourStep();
+}
+
+function closeTour(){
+  document.getElementById('tourOverlay').style.display='none';
+  try{localStorage.setItem('marketsim_tour_seen','1')}catch(e){}
+}
+
+function tourNav(dir){
+  tourCurrent+=dir;
+  if(tourCurrent>=TOUR_STEPS.length){closeTour();return}
+  if(tourCurrent<0)tourCurrent=0;
+  renderTourStep();
+}
+
+function renderTourStep(){
+  const s=TOUR_STEPS[tourCurrent];
+  document.getElementById('tourStep')
+    .textContent=tourCurrent===0?'Welcome':`Step ${tourCurrent} of ${TOUR_STEPS.length-1}`;
+  document.getElementById('tourIcon').textContent=s.icon;
+  document.getElementById('tourTitle').textContent=s.title;
+  document.getElementById('tourDesc').textContent=s.desc;
+
+  const tipEl=document.getElementById('tourTip');
+  if(s.tip){tipEl.textContent=s.tip;tipEl.style.display='block'}
+  else{tipEl.style.display='none'}
+
+  // Navigate to tab
+  if(s.tab){
+    document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    const tabItem=document.querySelector(`.sidebar-item[data-tab="${s.tab}"]`);
+    if(tabItem)tabItem.classList.add('active');
+    const tabContent=document.getElementById('tab-'+s.tab);
+    if(tabContent)tabContent.classList.add('active');
+  }
+
+  // Dots
+  const dotsEl=document.getElementById('tourDots');
+  dotsEl.innerHTML=TOUR_STEPS.map((_,i)=>
+    `<div class="tour-dot ${i===tourCurrent?'active':i<tourCurrent?'done':''}"></div>`
+  ).join('');
+
+  // Buttons
+  document.getElementById('tourPrev').disabled=tourCurrent===0;
+  document.getElementById('tourNext').textContent=
+    tourCurrent===TOUR_STEPS.length-1?'Let\'s Go! 🚀':'Next →';
+}
+
+// Auto-show tour on first Q1 visit
+(function(){
+  const origInit=window._tourInitHook;
+  const checkTour=()=>{
+    try{
+      if(localStorage.getItem('marketsim_tour_seen'))return;
+    }catch(e){}
+    // Show after a short delay so the page loads
+    setTimeout(()=>{
+      if(game && game.current_quarter<=1)startTour();
+    },800);
+  };
+  // Hook into the existing init completion
+  const origOnload=window.onload;
+  window.addEventListener('load',()=>setTimeout(checkTour,1200));
+})();
+</script>
+
 </body>
 </html>
