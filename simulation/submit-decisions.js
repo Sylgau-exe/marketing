@@ -89,8 +89,9 @@ export default async function handler(req, res) {
       await sql`UPDATE users SET decisions_used = COALESCE(decisions_used, 0) + 1 WHERE id = ${decoded.userId}`;
     } catch(e) { console.error('Could not increment decisions_used:', e); }
 
-    // Get segments
-    const segments = await SegmentDB.getForGame(game_id);
+    // Get segments and normalize field names for engine
+    const rawSegments = await SegmentDB.getForGame(game_id);
+    const segments = rawSegments.map(normalizeSegment);
 
     // Build engine state for all teams
     const engineTeams = [];
@@ -106,8 +107,8 @@ export default async function handler(req, res) {
       });
 
       if (String(t.id) === String(team_id)) {
-        // Player's decisions
-        decisionsMap[t.id] = playerDecisions;
+        // Player's decisions — normalize from frontend format to engine format
+        decisionsMap[t.id] = normalizePlayerDecisions(playerDecisions, brands, game.market_scenario);
       } else if (t.is_ai) {
         // Generate AI decisions
         const aiDec = generateAIDecisions({
@@ -192,6 +193,111 @@ export default async function handler(req, res) {
     console.error('Submit decisions error:', error);
     res.status(500).json({ error: 'Failed to process quarter: ' + error.message });
   }
+}
+
+/**
+ * Normalize frontend decision format → engine format.
+ * The frontend sends a different data shape than the simulation engine expects.
+ * This bridges the gap without changing either side.
+ */
+function normalizePlayerDecisions(d, brands, scenario) {
+  const normalized = {
+    rdBudget: parseFloat(d.rdBudget) || 0,
+    rdProjects: d.rdProjects || {},
+    production: d.production || {},
+    dividend: parseFloat(d.dividend) || 0
+  };
+
+  // 1. PRICING: Frontend sends {brandId: {REGION: price}}, engine reads {brandName: price}
+  normalized.pricing = {};
+  if (d.pricing) {
+    for (const [brandId, regionPrices] of Object.entries(d.pricing)) {
+      const brand = brands.find(b => String(b.id) === String(brandId));
+      if (brand && typeof regionPrices === 'object') {
+        // Engine uses single price per brand (take first region or average)
+        const prices = Object.values(regionPrices).map(p => parseFloat(p)).filter(p => p > 0);
+        normalized.pricing[brand.name] = prices.length ? Math.round(prices.reduce((a, b) => a + b) / prices.length) : 900;
+      } else if (brand && typeof regionPrices === 'number') {
+        normalized.pricing[brand.name] = regionPrices;
+      }
+    }
+  }
+  if (Object.keys(normalized.pricing).length === 0) normalized.pricing.default = 900;
+
+  // 2. ADVERTISING: Frontend sends {latam: 100000, target: 'seg'}, engine expects {latam: {spend: N, targetSegment: 'seg'}}
+  normalized.advertising = {};
+  const adTarget = d.advertising?.target || '';
+  const regions = ['latam', 'europe', 'apac'];
+  for (const region of regions) {
+    const spend = parseFloat(d.advertising?.[region]) || 0;
+    if (spend > 0 || d.advertising?.[region] !== undefined) {
+      normalized.advertising[region] = {
+        spend,
+        targetSegment: adTarget
+      };
+    }
+  }
+
+  // 3. INTERNET: Frontend sends {latam: N}, engine expects {webPages, seo, paidSearch, socialMedia}
+  // Split total internet budget across categories proportionally
+  const inetTotal = regions.reduce((sum, r) => sum + (parseFloat(d.internet_marketing?.[r] || d.internet?.[r]) || 0), 0);
+  normalized.internet = {
+    webPages: Math.max(0, Math.round(inetTotal * 0.25 / 5000)),
+    seo: Math.max(0, Math.round(inetTotal * 0.25 / 3000)),
+    paidSearch: Math.max(0, Math.round(inetTotal * 0.25 / 8000)),
+    socialMedia: Math.max(0, Math.round(inetTotal * 0.25 / 6000))
+  };
+
+  // 4. SALESFORCE: Frontend sends {latam: {count, salary, commission}}, engine expects {count, compensation, training}
+  normalized.salesforce = {};
+  if (d.salesforce) {
+    for (const [region, sf] of Object.entries(d.salesforce)) {
+      if (typeof sf === 'object' && sf !== null) {
+        normalized.salesforce[region] = {
+          count: parseInt(sf.count) || 0,
+          compensation: parseFloat(sf.salary || sf.compensation) || 30000,
+          training: parseFloat(sf.training) || 0
+        };
+      }
+    }
+  }
+
+  // 5. DISTRIBUTION: Frontend sends {latam: 2}, engine expects {latam: {outlets: 2, type: 'retail'}}
+  normalized.distribution = {};
+  if (d.distribution) {
+    for (const [region, val] of Object.entries(d.distribution)) {
+      if (typeof val === 'object' && val !== null) {
+        // Already in engine format
+        normalized.distribution[region] = val;
+      } else {
+        // Flat number → convert to engine format
+        normalized.distribution[region] = {
+          outlets: parseInt(val) || 0,
+          type: 'retail'
+        };
+      }
+    }
+  }
+
+  return normalized;
+}
+
+/**
+ * Normalize segment field names from DB columns (pref_*) to engine expectations (*_weight).
+ * DB uses: pref_price_sensitivity, pref_performance, pref_durability, etc.
+ * Engine reads: price_sensitivity, performance_weight, durability_weight, etc.
+ */
+function normalizeSegment(seg) {
+  const s = { ...seg };
+  // Map pref_* columns to engine field names
+  s.price_sensitivity = parseFloat(s.pref_price_sensitivity ?? s.price_sensitivity ?? 0.15);
+  s.performance_weight = parseFloat(s.pref_performance ?? s.performance_weight ?? 0.1);
+  s.durability_weight = parseFloat(s.pref_durability ?? s.durability_weight ?? 0.1);
+  s.style_weight = parseFloat(s.pref_style ?? s.style_weight ?? 0.1);
+  s.comfort_weight = parseFloat(s.pref_comfort ?? s.comfort_weight ?? 0.1);
+  s.lightweight_weight = parseFloat(s.pref_lightweight ?? s.lightweight_weight ?? 0.1);
+  s.customization_weight = parseFloat(s.pref_customization ?? s.customization_weight ?? 0.05);
+  return s;
 }
 
 function validateDecisions(decisions, team, game) {

@@ -223,7 +223,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
     <div class="tab-content" id="tab-pricing">
       <h2>💲 Pricing Strategy</h2>
       <div class="panel">
-        <h3>Set Prices Per Brand & Region</h3>
+        <h3>Set Prices Per Brand</h3>
         <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Prices are per unit in USD. Consider segment price sensitivity and competitor pricing.</p>
         <div id="pricingTable"><p style="color:var(--muted);font-size:.85rem">Create brands first to set pricing.</p></div>
       </div>
@@ -233,7 +233,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
     <div class="tab-content" id="tab-advertising">
       <h2>📣 Advertising & Marketing</h2>
       <div class="panel">
-        <h3>Regional Media Spend</h3>
+        <h3>Media Spend</h3>
         <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Allocate quarterly advertising budget per region (in $). Target specific segments with your ads.</p>
         <div class="region-grid">
           <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
@@ -263,7 +263,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
     <div class="tab-content" id="tab-salesforce">
       <h2>👥 Sales Force Management</h2>
       <div class="panel">
-        <h3>Headcount Per Region</h3>
+        <h3>Sales Team</h3>
         <div class="region-grid">
           <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
           <div>Sales Reps</div>
@@ -286,7 +286,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
     <div class="tab-content" id="tab-distribution">
       <h2>🏪 Distribution Channels</h2>
       <div class="panel">
-        <h3>Sales Outlets Per Region</h3>
+        <h3>Sales Outlets</h3>
         <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Each outlet costs ~$50,000/quarter to operate. More outlets = wider reach.</p>
         <div class="region-grid">
           <div class="header"></div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
@@ -574,14 +574,20 @@ function updatePricingTable(){
   if(!brands.length)return;
   const container=document.getElementById('pricingTable');
   const cols=ACTIVE_REGIONS.length;
+  // Calculate smart suggested price: 35% markup over highest unit cost
+  const maxCost=Math.max(...brands.filter(b=>b.is_active).map(b=>parseFloat(b.unit_cost)||0));
+  const smartPrice=maxCost>0?Math.ceil((maxCost*1.35)/10)*10:SUGGESTED.price;
+  
   container.innerHTML=`<div class="region-grid" style="grid-template-columns:150px repeat(${cols},1fr)">
     <div class="header">Brand</div>${ACTIVE_REGIONS.map(r=>`<div class="header">${r}</div>`).join('')}
-    ${brands.filter(b=>b.is_active).map(b=>`
-      <div>${esc(b.name)} <span style="font-size:.7rem;color:var(--muted)">($${Number(b.unit_cost||0).toLocaleString()} cost)</span></div>
-      ${ACTIVE_REGIONS.map(r=>`<input type="number" id="price_${b.id}_${r}" value="${getDecisionPrice(b.id,r)}" min="200" max="3000" step="10" onchange="updateDecisions()">`).join('')}
-    `).join('')}
+    ${brands.filter(b=>b.is_active).map(b=>{
+      const cost=parseFloat(b.unit_cost)||0;
+      const defPrice=Math.max(getDecisionPrice(b.id,ACTIVE_REGIONS[0]),Math.ceil((cost*1.35)/10)*10);
+      return `<div>${esc(b.name)} <span style="font-size:.7rem;color:var(--muted)">($${Number(cost).toLocaleString()} cost)</span></div>
+      ${ACTIVE_REGIONS.map(r=>`<input type="number" id="price_${b.id}_${r}" value="${Math.max(getDecisionPrice(b.id,r),Math.ceil((cost*1.35)/10)*10)}" min="200" max="5000" step="10" onchange="updateDecisions()">`).join('')}`;
+    }).join('')}
   </div>
-  <p style="font-size:.75rem;color:var(--muted);margin-top:8px">💡 Suggested starting price: $${SUGGESTED.price}. Set price above your unit cost to make profit.</p>`;
+  <p style="font-size:.75rem;color:var(--muted);margin-top:8px">💡 Suggested: ~35% markup over unit cost ($${smartPrice}+). Set price above cost to make profit.</p>`;
 }
 
 function updateProductionTable(){
