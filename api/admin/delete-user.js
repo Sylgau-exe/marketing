@@ -18,7 +18,8 @@ export default async function handler(req, res) {
   if (userId === decoded.userId) return res.status(400).json({ error: 'Cannot delete your own account' });
 
   try {
-    await sql`DELETE FROM team_members WHERE user_id = ${userId}`;
+    // Delete user's games and associated data (cascades to teams, decisions, results)
+    await sql`DELETE FROM games WHERE user_id = ${userId}`;
     await sql`DELETE FROM users WHERE id = ${userId}`;
     res.json({ success: true });
   } catch (error) {

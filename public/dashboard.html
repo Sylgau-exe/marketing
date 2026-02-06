@@ -6,7 +6,7 @@
 <title>Dashboard — MarketSim Live</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e1a;--card:#111827;--border:#1e293b;--primary:#3b82f6;--primary-hover:#2563eb;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--surface:#1e293b}
+:root{--bg:#0a0e1a;--card:#111827;--border:#1e293b;--primary:#3b82f6;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--surface:#1e293b}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 nav{display:flex;justify-content:space-between;align-items:center;padding:16px 40px;border-bottom:1px solid var(--border);background:rgba(10,14,26,.95)}
@@ -39,7 +39,7 @@ h1{font-size:1.8rem;margin-bottom:4px}
 .detail-tag{padding:3px 10px;border-radius:6px;font-size:.75rem;background:var(--surface);color:var(--muted);border:1px solid var(--border)}
 
 .scenario-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.player-count{font-size:.82rem;color:var(--muted)}
+.ai-count{font-size:.82rem;color:var(--muted)}
 .play-btn{padding:10px 28px;border-radius:10px;border:none;font-weight:700;font-size:.9rem;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--primary),var(--accent));transition:all .2s;font-family:inherit}
 .play-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,.3)}
 .play-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
@@ -50,7 +50,6 @@ h1{font-size:1.8rem;margin-bottom:4px}
 .game-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
 .game-name{font-size:1.1rem;font-weight:600}
 .game-status{padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:600;text-transform:uppercase}
-.status-lobby{background:rgba(245,158,11,.15);color:var(--yellow)}
 .status-active{background:rgba(16,185,129,.15);color:var(--green)}
 .status-completed{background:rgba(148,163,184,.15);color:var(--muted)}
 .game-meta{color:var(--muted);font-size:.85rem;display:flex;flex-direction:column;gap:6px}
@@ -88,19 +87,19 @@ h1{font-size:1.8rem;margin-bottom:4px}
 
 <div class="container">
   <h1 id="greeting">Dashboard</h1>
-  <p class="subtitle">Choose a scenario and start competing. Each game matches you with other players automatically.</p>
+  <p class="subtitle">Choose an industry scenario and test your marketing strategy against AI competitors.</p>
 
   <div class="section-title">🎯 Choose a Scenario</div>
   <div class="scenarios-grid" id="scenariosList">
     <div style="color:var(--muted);padding:40px;text-align:center">Loading scenarios...</div>
   </div>
 
-  <div class="section-title">📋 My Active Games</div>
+  <div class="section-title">📋 My Simulations</div>
   <div id="gamesList" class="games-grid"></div>
   <div id="emptyState" class="empty-state" style="display:none">
     <div class="icon">🎮</div>
-    <h3>No games yet</h3>
-    <p>Pick a scenario above to start your first game!</p>
+    <h3>No simulations yet</h3>
+    <p>Pick a scenario above to start your first simulation!</p>
   </div>
 </div>
 
@@ -115,31 +114,24 @@ async function apiFetch(url, opts = {}) {
   try {
     const res = await fetch(API + url, { ...opts, headers });
     const text = await res.text();
-    try { return JSON.parse(text); } catch(e) { console.error('Non-JSON from ' + url + ':', text); return { error: 'Server error' }; }
-  } catch(e) { console.error('Network error for ' + url + ':', e); return { error: 'Network error' }; }
+    try { return JSON.parse(text); } catch(e) { return { error: 'Server error' }; }
+  } catch(e) { return { error: 'Network error' }; }
 }
 
-function logout() {
-  localStorage.removeItem('token');
-  window.location.href = '/index.html';
-}
-
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
+function logout() { localStorage.removeItem('token'); window.location.href = '/index.html'; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 async function init() {
   const data = await apiFetch('/api/auth/me');
   if (!data.user) return window.location.href = '/index.html';
   user = data.user;
   document.getElementById('userName').textContent = user.name;
-  if(user.isAdmin) document.getElementById('adminLink').style.display='inline-flex';
-  if(user.subscriptionTier==='pro'&&user.subscriptionStatus==='active') document.getElementById('pricingLink').style.display='none';
-  // Handle payment success redirect
-  const params=new URLSearchParams(window.location.search);
-  if(params.get('payment')==='success'){alert('🎉 Payment successful! Welcome to Pro!');window.history.replaceState({},'','/dashboard.html');}
+  if (user.isAdmin) document.getElementById('adminLink').style.display = 'inline-flex';
+  if (user.subscriptionTier === 'pro' && user.subscriptionStatus === 'active') document.getElementById('pricingLink').style.display = 'none';
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('payment') === 'success') { alert('🎉 Payment successful! Welcome to Pro!'); window.history.replaceState({}, '', '/dashboard.html'); }
+
   document.getElementById('greeting').textContent = 'Welcome back, ' + user.name.split(' ')[0] + '!';
   loadScenarios();
   loadGames();
@@ -168,19 +160,36 @@ async function loadScenarios() {
         '<div class="scenario-details">' +
           s.regions.map(function(r) { return '<span class="detail-tag">🌎 ' + r + '</span>'; }).join('') +
           s.segments.map(function(seg) { return '<span class="detail-tag">👤 ' + seg + '</span>'; }).join('') +
-          '<span class="detail-tag">👥 ' + s.maxTeams + ' teams</span>' +
+          '<span class="detail-tag">🤖 ' + s.aiCompetitors + ' AI competitors</span>' +
         '</div>' +
       '</div>' +
       '<div class="scenario-footer">' +
-        '<span class="player-count" id="count-' + s.id + '"></span>' +
-        '<button class="play-btn" id="btn-' + s.id + '" onclick="joinScenario(\'' + s.id + '\')">📋 View Brief</button>' +
+        '<span class="ai-count">Solo vs ' + s.aiCompetitors + ' AI</span>' +
+        '<button class="play-btn" id="btn-' + s.id + '" onclick="startScenario(\'' + s.id + '\')">▶ Start Simulation</button>' +
       '</div>' +
     '</div>';
   }).join('');
 }
 
-function joinScenario(scenarioId) {
-  window.location.href = '/briefing.html?scenario=' + scenarioId;
+async function startScenario(scenarioId) {
+  var btn = document.getElementById('btn-' + scenarioId);
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Starting...';
+
+  var data = await apiFetch('/api/game/quick-join', {
+    method: 'POST',
+    body: JSON.stringify({ scenarioId: scenarioId })
+  });
+
+  if (data.error) {
+    alert('Error: ' + data.error);
+    btn.disabled = false;
+    btn.textContent = '▶ Start Simulation';
+    return;
+  }
+
+  // Go straight to simulation (or briefing first)
+  window.location.href = '/briefing.html?scenario=' + scenarioId + '&game=' + data.game.id;
 }
 
 async function loadGames() {
@@ -195,23 +204,35 @@ async function loadGames() {
   }
 
   document.getElementById('emptyState').style.display = 'none';
+
+  var SCENARIO_ICONS = {
+    'local-launch': '📱', 'mountain-expedition': '⌚',
+    'global-domination': '💻', 'speed-innovation': '🥽'
+  };
+  var SCENARIO_NAMES = {
+    'local-launch': 'Phone First', 'mountain-expedition': 'Wearable Edge',
+    'global-domination': 'Laptop Empire', 'speed-innovation': 'VR Rush'
+  };
+
   container.innerHTML = games.map(function(g) {
-    var statusClass = g.status === 'lobby' ? 'status-lobby' : g.status === 'active' ? 'status-active' : 'status-completed';
-    var qLabel = g.current_quarter === 0 ? 'Lobby' : 'Q' + g.current_quarter + '/8';
-    var scenarioName = g.market_scenario ? g.market_scenario.replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); }) : 'Standard';
+    var statusClass = g.status === 'active' ? 'status-active' : 'status-completed';
+    var qLabel = 'Q' + g.current_quarter + '/8';
+    var icon = SCENARIO_ICONS[g.market_scenario] || '🎯';
+    var scenarioName = SCENARIO_NAMES[g.market_scenario] || g.market_scenario;
+    var progress = Math.round((g.current_quarter - 1) / 8 * 100);
+
     return '<a class="game-card" href="/simulation.html?game=' + g.id + '">' +
       '<div class="game-header">' +
-        '<div class="game-name">' + esc(g.name || 'Game') + '</div>' +
+        '<div class="game-name">' + icon + ' ' + esc(scenarioName) + '</div>' +
         '<span class="game-status ' + statusClass + '">' + g.status + '</span>' +
       '</div>' +
       '<div class="game-meta">' +
-        '<span>🎯 ' + scenarioName + '</span>' +
-        '<span>👥 ' + (g.team_count || 0) + ' team' + (g.team_count !== 1 ? 's' : '') + '</span>' +
-        (g.team_name ? '<span>🏷️ My Team: ' + esc(g.team_name) + '</span>' : '') +
+        '<span>📊 Cash: $' + Number(g.cash_balance || 0).toLocaleString() + '</span>' +
+        '<div style="background:var(--surface);border-radius:4px;height:6px;margin-top:4px"><div style="background:linear-gradient(90deg,var(--primary),var(--accent));height:100%;border-radius:4px;width:' + progress + '%"></div></div>' +
       '</div>' +
       '<div class="game-footer">' +
         '<div class="quarter-display">Quarter: <strong>' + qLabel + '</strong></div>' +
-        '<span class="continue-btn">Continue →</span>' +
+        '<span class="continue-btn">' + (g.status === 'completed' ? 'View Results' : 'Continue →') + '</span>' +
       '</div>' +
     '</a>';
   }).join('');

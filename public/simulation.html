@@ -97,8 +97,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
 .loading{text-align:center;padding:40px;color:var(--muted)}
 
 /* Instructor panel */
-.instructor-panel{background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:16px;margin-bottom:20px}
-.instructor-panel h3{color:var(--accent)}
+/* Solo mode only — no instructor panel */
 
 @media(max-width:900px){.sidebar{width:60px}.sidebar-item span{display:none}.sidebar-label{display:none}}
 /* Paywall modal */
@@ -139,14 +138,13 @@ tr:hover td{background:rgba(59,130,246,.03)}
     <a href="/dashboard.html" class="logo">🎯 MarketSim</a>
     <div class="game-info">
       <span id="gameName">Loading...</span>
-      <span class="code" id="gameCode">---</span>
       <span class="quarter-badge" id="quarterBadge">Q0</span>
     </div>
   </div>
   <div class="topbar-right">
     <span id="teamName" style="font-size:.85rem;color:var(--muted)"></span>
     <span id="cashDisplay" style="font-size:.85rem;font-weight:600;color:var(--green)"></span>
-    <button class="btn btn-outline btn-sm" onclick="window.location.href='/dashboard.html'">← Games</button>
+    <button class="btn btn-outline btn-sm" onclick="window.location.href='/dashboard.html'">← Dashboard</button>
   </div>
 </div>
 
@@ -155,7 +153,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
     <div class="sidebar-section">
       <div class="sidebar-label">Decisions</div>
       <div class="sidebar-item active" data-tab="overview"><span>📊</span><span>Overview</span></div>
-      <div class="sidebar-item" data-tab="brands"><span>🚲</span><span>Brands</span></div>
+      <div class="sidebar-item" data-tab="brands"><span>🏷️</span><span>Brands</span></div>
       <div class="sidebar-item" data-tab="pricing"><span>💲</span><span>Pricing</span></div>
       <div class="sidebar-item" data-tab="advertising"><span>📣</span><span>Advertising</span></div>
       <div class="sidebar-item" data-tab="salesforce"><span>👥</span><span>Sales Force</span></div>
@@ -169,10 +167,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
       <div class="sidebar-item" data-tab="results"><span>📈</span><span>Results</span></div>
       <div class="sidebar-item" data-tab="financials"><span>💰</span><span>Financials</span></div>
       <div class="sidebar-item" data-tab="research"><span>🔍</span><span>Market Research</span></div>
-      <div class="sidebar-item" data-tab="leaderboard"><span>🏆</span><span>Leaderboard</span></div>
-    </div>
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-section" id="instructorNav" style="display:none">
+      <div class="sidebar-item" data-tab="leaderboard"><span>🏆</span><span>Rankings vs AI</span></div>
     </div>
     </div>
     <div class="sidebar-footer">
@@ -201,7 +196,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
 
     <!-- BRANDS TAB -->
     <div class="tab-content" id="tab-brands">
-      <h2>🚲 Brand Management</h2>
+      <h2>🏷️ Brand Management</h2>
       <div class="panel">
         <h3>Design a New Brand</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
@@ -348,23 +343,8 @@ tr:hover td{background:rgba(59,130,246,.03)}
 
     <!-- LEADERBOARD TAB -->
     <div class="tab-content" id="tab-leaderboard">
-      <h2>🏆 Leaderboard</h2>
-      <div id="leaderboardContent"><p style="color:var(--muted)">Rankings will appear after the first quarter is processed.</p></div>
-    </div>
-
-    <!-- INSTRUCTOR TAB -->
-    <div class="tab-content" id="tab-instructor">
-      <h2>👨‍🏫 Game Management</h2>
-      <div class="instructor-panel">
-        <h3>⚡ Advance Quarter</h3>
-        <p style="font-size:.85rem;color:var(--muted);margin-bottom:12px">Process all team decisions and advance to the next quarter.</p>
-        <div id="advanceInfo" style="margin-bottom:12px"></div>
-        <button class="btn btn-primary" onclick="advanceQuarter()" id="advanceBtn">Advance to Next Quarter</button>
-      </div>
-      <div class="panel">
-        <h3>Teams Overview</h3>
-        <div id="instructorTeams"></div>
-      </div>
+      <h2>🏆 Rankings vs AI Competitors</h2>
+      <div id="leaderboardContent"><p style="color:var(--muted)">Rankings will appear after your first quarter is processed.</p></div>
     </div>
 
   </div>
@@ -488,15 +468,12 @@ async function init(){
     });
   });
 
-  document.getElementById('gameName').textContent=game.name||game.code||'Game';
-  document.getElementById('gameCode').textContent=game.code||'';
-  document.getElementById('quarterBadge').textContent=game.current_quarter===0?'Lobby':'Q'+game.current_quarter;
+  document.getElementById('gameName').textContent=game.name||'Simulation';
+  document.getElementById('quarterBadge').textContent='Q'+game.current_quarter;
   document.getElementById('submitQ').textContent=game.current_quarter||1;
   if(team){
-    document.getElementById('teamName').textContent=(team.logo_emoji||'🏢')+' '+(team.name||'My Team');
+    document.getElementById('teamName').textContent=(team.logo_emoji||'🏢')+' '+(team.name||'My Company');
     document.getElementById('cashDisplay').textContent='$'+Number(team.cash_balance||5000000).toLocaleString();
-  } else {
-    document.getElementById('teamName').textContent='No team assigned';
   }
 
   // Instructor panel removed — using preset scenarios only
@@ -572,13 +549,30 @@ async function saveDecisions(){
 }
 
 async function submitDecisions(){
-  if(!confirm('Submit your decisions for Q'+(game.current_quarter||1)+'? You won\'t be able to change them after.'))return;
+  if(!confirm('Submit your decisions for Q'+(game.current_quarter||1)+'? The quarter will process immediately.'))return;
   decisions=collectDecisions();
+  var btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='⏳ Processing...';
+  document.getElementById('submitStatus').textContent='Processing quarter...';
   const data=await apiFetch('/api/simulation/submit-decisions',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,quarter:game.current_quarter,decisions,submit:true})});
-  if(data.code==='PAYWALL'){showPaywall(data);return;}
-  if(data.error)return alert(data.error);
-  document.getElementById('submitStatus').textContent='✅ Decisions submitted for Q'+(game.current_quarter||1);
-  document.getElementById('submitStatus').classList.add('submitted');
+  if(data.code==='PAYWALL'){btn.disabled=false;btn.textContent='Submit Q'+(game.current_quarter||1);showPaywall(data);return;}
+  if(data.error){btn.disabled=false;btn.textContent='Submit Q'+(game.current_quarter||1);return alert(data.error);}
+
+  // Quarter processed! Show results summary
+  var r=data.results;
+  if(r){
+    var rank=1;
+    if(data.leaderboard){data.leaderboard.forEach(function(t,i){if(t.isPlayer)rank=i+1});}
+    alert('✅ Q'+(data.quarterProcessed)+' Results!\n\n'+
+      '💰 Revenue: $'+Number(r.revenue||0).toLocaleString()+'\n'+
+      '📊 Net Income: $'+Number(r.netIncome||0).toLocaleString()+'\n'+
+      '📈 Market Share: '+((r.marketShare||0)*100).toFixed(1)+'%\n'+
+      '🏆 Scorecard: '+(r.balancedScorecard||0).toFixed(2)+'\n'+
+      '🥇 Rank: #'+rank+' of '+(data.leaderboard?.length||1)+'\n\n'+
+      (data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter));
+  }
+  // Reload to show new quarter
+  location.reload();
 }
 
 function showPaywall(data){
@@ -679,9 +673,10 @@ async function loadLeaderboard(){
   const data=await apiFetch(`/api/simulation/leaderboard?game_id=${gameId}`);
   if(!data.leaderboard)return;
   const container=document.getElementById('leaderboardContent');
-  container.innerHTML=data.leaderboard.map((t,i)=>{
-    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    return `<div class="lb-row"><div class="lb-rank ${rankClass}">#${i+1}</div><div class="lb-name">${(t.logo_emoji||'🏢')+' '+esc(t.name)}</div><div class="lb-score">${(t.cumulative_scorecard||0).toFixed(2)}</div></div>`;
+  container.innerHTML=data.leaderboard.map(function(t,i){
+    var rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    var isYou=t.is_player||t.isPlayer;
+    return '<div class="lb-row" style="'+(isYou?'background:rgba(59,130,246,.08);border:1px solid var(--primary);border-radius:8px;padding:8px 12px':'')+'"><div class="lb-rank '+rankClass+'">#'+(i+1)+'</div><div class="lb-name">'+(t.logo_emoji||'🏢')+' '+esc(t.name)+(isYou?' <span style="color:var(--primary);font-size:.75rem">YOU</span>':'<span style="color:var(--muted);font-size:.75rem"> 🤖 AI</span>')+'</div><div class="lb-score">'+(t.cumulative_scorecard||t.balanced_scorecard||0).toFixed(2)+'</div></div>';
   }).join('');
 }
 
@@ -697,26 +692,6 @@ async function loadResearch(){
     <div class="panel"><h3>Market Trends</h3>
       <p style="color:var(--muted);font-size:.85rem">${JSON.stringify(r.market_trends||{},null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;')}</p>
     </div>`;
-}
-
-async function loadInstructorPanel(){
-  const data=await apiFetch('/api/game/details?game_id='+gameId);
-  const teams=data.teams||[];
-  const submitted=teams.filter(t=>t.has_submitted).length;
-  document.getElementById('advanceInfo').innerHTML=`<p style="font-size:.9rem">${submitted}/${teams.length} teams have submitted. Quarter: ${game.current_quarter}/8</p>`;
-  document.getElementById('instructorTeams').innerHTML=teams.length?`<table><thead><tr><th>Team</th><th>Cash</th><th>Submitted</th><th>Members</th></tr></thead><tbody>${
-    teams.map(t=>`<tr><td>${(t.logo_emoji||'🏢')+' '+esc(t.name)}</td><td>$${N(t.cash_balance)}</td><td>${t.has_submitted?'<span style="color:var(--green)">✅ Yes</span>':'<span style="color:var(--yellow)">⏳ No</span>'}</td><td>${t.member_count||'?'}</td></tr>`).join('')
-  }</tbody></table>`:'<p style="color:var(--muted)">No teams yet</p>';
-}
-
-async function advanceQuarter(){
-  if(!confirm(`Advance from Q${game.current_quarter} to Q${game.current_quarter+1}? This will process all decisions.`))return;
-  document.getElementById('advanceBtn').disabled=true;
-  document.getElementById('advanceBtn').textContent='Processing...';
-  const data=await apiFetch('/api/game/advance',{method:'POST',body:JSON.stringify({game_id:gameId})});
-  if(data.error){alert(data.error);document.getElementById('advanceBtn').disabled=false;document.getElementById('advanceBtn').textContent='Advance to Next Quarter';return}
-  alert('Quarter advanced! Reloading...');
-  location.reload();
 }
 
 function N(v){return Number(v||0).toLocaleString()}

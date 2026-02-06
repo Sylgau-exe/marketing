@@ -1,6 +1,7 @@
-// api/team/brands.js - Brand CRUD
+// api/team/brands.js - Brand CRUD (solo mode)
+import { sql } from '@vercel/postgres';
 import { requireAuth, cors } from '../../lib/auth.js';
-import { TeamMemberDB, BrandDB } from '../../lib/db.js';
+import { BrandDB } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -27,19 +28,22 @@ function formatBrand(b) {
   return {
     id: b.id, name: b.name, targetSegment: b.target_segment,
     components: { frame: b.frame_quality, wheels: b.wheels_quality, drivetrain: b.drivetrain_quality, brakes: b.brakes_quality, suspension: b.suspension_quality, seat: b.seat_quality, handlebars: b.handlebars_quality, electronics: b.electronics_quality },
-    overallQuality: b.overall_quality, unitCost: b.unit_cost, rdInvestment: b.rd_investment, isActive: b.is_active
+    overallQuality: b.overall_quality, unitCost: b.unit_cost, rdInvestment: b.rd_investment, isActive: b.status === 'active'
   };
 }
 
-async function verifyAccess(teamId, userId) {
-  const members = await TeamMemberDB.findByTeam(teamId);
-  return members.some(m => m.user_id === userId);
+async function verifyGameOwnership(teamId, userId) {
+  const result = await sql`
+    SELECT g.user_id FROM teams t JOIN games g ON g.id = t.game_id WHERE t.id = ${teamId}
+  `;
+  if (!result.rows.length) return false;
+  return String(result.rows[0].user_id) === String(userId);
 }
 
 async function handleGet(req, res, decoded) {
   const teamId = req.query.team_id || req.query.teamId;
   if (!teamId) return res.status(400).json({ error: 'Team ID required' });
-  if (!await verifyAccess(teamId, decoded.userId)) return res.status(403).json({ error: 'Access denied' });
+  if (!await verifyGameOwnership(teamId, decoded.userId) && !decoded.isAdmin) return res.status(403).json({ error: 'Access denied' });
   const brands = await BrandDB.findByTeam(teamId);
   res.json({ brands: brands.map(formatBrand) });
 }
@@ -48,11 +52,11 @@ async function handleCreate(req, res, decoded) {
   const { team_id, game_id, name, target_segment, components, rdInvestment = 0 } = req.body;
   const teamId = team_id;
   if (!teamId || !name || !target_segment) return res.status(400).json({ error: 'Team ID, name, and target segment required' });
-  if (!await verifyAccess(teamId, decoded.userId)) return res.status(403).json({ error: 'Access denied' });
+  if (!await verifyGameOwnership(teamId, decoded.userId) && !decoded.isAdmin) return res.status(403).json({ error: 'Access denied' });
 
   const existing = await BrandDB.findByTeam(teamId);
-  if (existing.filter(b => b.is_active).length >= 5) return res.status(400).json({ error: 'Maximum 5 active brands' });
-  if (existing.some(b => b.name.toLowerCase() === name.toLowerCase() && b.is_active)) return res.status(400).json({ error: 'Brand name already exists' });
+  if (existing.filter(b => b.status === 'active').length >= 5) return res.status(400).json({ error: 'Maximum 5 active brands' });
+  if (existing.some(b => b.name.toLowerCase() === name.toLowerCase() && b.status === 'active')) return res.status(400).json({ error: 'Brand name already exists' });
 
   const c = components || {};
   const brand = await BrandDB.create({

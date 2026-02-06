@@ -1,5 +1,6 @@
--- MarketSim Live - Marketing & Sales Simulation Database Schema
+-- MarketSim Live - Solo Marketing Simulation Database Schema
 -- Run this in Neon SQL Editor (https://console.neon.tech)
+-- Solo mode: one user per simulation, competing against AI companies
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
@@ -10,12 +11,16 @@ CREATE TABLE IF NOT EXISTS users (
   organization VARCHAR(255),
   job_title VARCHAR(255),
   is_admin BOOLEAN DEFAULT false,
-  is_instructor BOOLEAN DEFAULT false,
   google_id VARCHAR(255),
   auth_provider VARCHAR(50) DEFAULT 'email',
   email_verified BOOLEAN DEFAULT false,
   reset_token VARCHAR(255),
   reset_token_expires TIMESTAMP,
+  stripe_customer_id VARCHAR(255),
+  subscription_tier VARCHAR(50) DEFAULT 'free',
+  subscription_status VARCHAR(50) DEFAULT 'inactive',
+  subscription_type VARCHAR(50),
+  decisions_used INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -25,18 +30,16 @@ DO $$ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
--- Games (simulation instances)
+-- Simulations (one per user per scenario)
 CREATE TABLE IF NOT EXISTS games (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   code VARCHAR(20) UNIQUE NOT NULL,
-  instructor_id INTEGER REFERENCES users(id),
+  user_id INTEGER REFERENCES users(id),
   status VARCHAR(20) DEFAULT 'setup',
   current_quarter INTEGER DEFAULT 0,
   total_quarters INTEGER DEFAULT 8,
-  market_scenario VARCHAR(50) DEFAULT 'bikes',
-  max_teams INTEGER DEFAULT 8,
-  max_team_size INTEGER DEFAULT 5,
+  market_scenario VARCHAR(50) DEFAULT 'local-launch',
   quarter_deadline TIMESTAMP,
   auto_advance BOOLEAN DEFAULT false,
   settings JSONB DEFAULT '{}',
@@ -44,31 +47,22 @@ CREATE TABLE IF NOT EXISTS games (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Teams
+-- Companies (player's company + AI competitor companies)
 CREATE TABLE IF NOT EXISTS teams (
   id SERIAL PRIMARY KEY,
   game_id INTEGER REFERENCES games(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   company_name VARCHAR(255),
-  logo_emoji VARCHAR(10) DEFAULT '🚲',
+  logo_emoji VARCHAR(10) DEFAULT '📱',
   cash_balance DECIMAL(12,2) DEFAULT 5000000,
   total_investment DECIMAL(12,2) DEFAULT 5000000,
   cumulative_profit DECIMAL(12,2) DEFAULT 0,
   retained_earnings DECIMAL(12,2) DEFAULT 0,
   has_submitted BOOLEAN DEFAULT false,
+  is_ai BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(game_id, name)
-);
-
--- Team members
-CREATE TABLE IF NOT EXISTS team_members (
-  id SERIAL PRIMARY KEY,
-  team_id INTEGER REFERENCES teams(id) ON DELETE CASCADE,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  role VARCHAR(100) DEFAULT 'member',
-  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(team_id, user_id)
 );
 
 -- Market segments
@@ -94,7 +88,7 @@ CREATE TABLE IF NOT EXISTS market_segments (
   growth_rate DECIMAL(5,2) DEFAULT 5.0
 );
 
--- Brands (products)
+-- Brands (products created by player or AI)
 CREATE TABLE IF NOT EXISTS brands (
   id SERIAL PRIMARY KEY,
   team_id INTEGER REFERENCES teams(id) ON DELETE CASCADE,
@@ -213,21 +207,23 @@ CREATE TABLE IF NOT EXISTS admin_activity_log (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Stripe payment columns
-ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(50) DEFAULT 'free';
-ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'inactive';
-ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_type VARCHAR(50);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS decisions_used INTEGER DEFAULT 0;
-CREATE INDEX IF NOT EXISTS idx_users_stripe ON users(stripe_customer_id);
-
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_stripe ON users(stripe_customer_id);
 CREATE INDEX IF NOT EXISTS idx_games_code ON games(code);
-CREATE INDEX IF NOT EXISTS idx_games_instructor ON games(instructor_id);
+CREATE INDEX IF NOT EXISTS idx_games_user ON games(user_id);
 CREATE INDEX IF NOT EXISTS idx_teams_game ON teams(game_id);
-CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_brands_team ON brands(team_id);
 CREATE INDEX IF NOT EXISTS idx_decisions_team_quarter ON quarterly_decisions(team_id, quarter);
 CREATE INDEX IF NOT EXISTS idx_results_team_quarter ON quarterly_results(team_id, quarter);
 CREATE INDEX IF NOT EXISTS idx_events_game ON game_events(game_id);
+
+-- ============================================================
+-- MIGRATION: Clean up legacy multiplayer columns
+-- Safe to run on existing database — removes unused columns/tables
+-- ============================================================
+ALTER TABLE games DROP COLUMN IF EXISTS instructor_id;
+ALTER TABLE games DROP COLUMN IF EXISTS max_teams;
+ALTER TABLE games DROP COLUMN IF EXISTS max_team_size;
+ALTER TABLE users DROP COLUMN IF EXISTS is_instructor;
+DROP TABLE IF EXISTS team_members;

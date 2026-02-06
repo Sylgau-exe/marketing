@@ -138,11 +138,11 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
 </nav>
 
 <section class="hero">
-  <h1>Master Marketing Strategy in a <span>Live Competitive Simulation</span></h1>
-  <p>Lead a tech startup across global markets. Design products, set prices, run ad campaigns, and outperform rival teams — all in real time.</p>
+  <h1>Master Marketing Strategy in a <span>Live AI-Powered Simulation</span></h1>
+  <p>Lead a tech startup across global markets. Design products, set prices, run ad campaigns, and outperform AI competitors — sharpen your marketing skills one quarter at a time.</p>
   <div class="hero-actions">
     <button class="btn btn-primary btn-lg" onclick="showModal('register')">Get Started Free</button>
-    <button class="btn btn-outline btn-lg" onclick="showModal('join')">Join a Game</button>
+    <a href="#pricing" class="btn btn-outline btn-lg">View Pricing</a>
   </div>
 </section>
 
@@ -170,12 +170,12 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
   <div class="feature-card">
     <div class="feature-icon">🏆</div>
     <h3>Compete Live</h3>
-    <p>Teams of up to 5 compete head-to-head over 8 quarterly rounds. Every decision counts in a dynamic, evolving market.</p>
+    <p>Compete against AI-driven rivals over 8 quarterly rounds. Every decision counts in a dynamic, evolving market.</p>
   </div>
   <div class="feature-card">
     <div class="feature-icon">🎓</div>
     <h3>Instructor Tools</h3>
-    <p>Create games, manage teams, advance quarters, track progress with detailed analytics, and evaluate performance with automated scoring.</p>
+    <p>Track your progress with a balanced scorecard, detailed financial reports, market research, and performance analytics across all 8 quarters.</p>
   </div>
 </section>
 
@@ -280,10 +280,6 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
     <div class="form-group"><label>Full Name</label><input type="text" id="regName"></div>
     <div class="form-group"><label>Email</label><input type="email" id="regEmail"></div>
     <div class="form-group"><label>Password (min 8 chars)</label><input type="password" id="regPassword"></div>
-    <div class="form-group">
-      <label>Role</label>
-      <select id="regRole"><option value="student">Student</option><option value="instructor">Instructor</option></select>
-    </div>
     <button class="btn btn-primary" style="width:100%" onclick="doRegister()">Create Account</button>
     <div class="divider">or</div>
     <button class="btn-google" onclick="googleAuth()">
@@ -307,24 +303,6 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
 </div>
 
 <!-- Join Game Modal -->
-<div class="modal-overlay" id="joinModal">
-  <div class="modal">
-    <h2>Join a Game</h2>
-    <div class="alert alert-error" id="joinError"></div>
-    <div class="alert alert-success" id="joinSuccess"></div>
-    <p style="color:var(--muted);font-size:.9rem;margin-bottom:16px">Enter the game code from your instructor</p>
-    <div class="form-group">
-      <label>Game Code</label>
-      <div class="join-input">
-        <input type="text" id="joinCode" placeholder="e.g. MKT-ABC123" style="text-transform:uppercase">
-        <button class="btn btn-primary" onclick="doJoinGame()">Join</button>
-      </div>
-    </div>
-    <div class="form-group"><label>Team Name (or leave blank to auto-assign)</label><input type="text" id="joinTeam" placeholder="Optional"></div>
-    <div class="modal-footer"><a href="#" onclick="closeModals();return false">Cancel</a></div>
-  </div>
-</div>
-
 <script>
 const API=window.location.origin;
 let currentUser=null;
@@ -369,10 +347,9 @@ async function doRegister(){
   const name=document.getElementById('regName').value;
   const email=document.getElementById('regEmail').value;
   const password=document.getElementById('regPassword').value;
-  const role=document.getElementById('regRole').value;
   if(!name||!email||!password)return showError('registerError','Please fill in all fields');
   try{
-    const data=await apiFetch('/api/auth/register',{method:'POST',body:JSON.stringify({name,email,password,is_instructor:role==='instructor'})});
+    const data=await apiFetch('/api/auth/register',{method:'POST',body:JSON.stringify({name,email,password})});
     if(data.error)return showError('registerError',data.error);
     if(!data.token){console.error('No token in register response:',data);return showError('registerError','Registration failed — please try again')}
     localStorage.setItem('token',data.token);
@@ -390,19 +367,6 @@ async function doForgot(){
   const data=await apiFetch('/api/auth/forgot-password',{method:'POST',body:JSON.stringify({email})});
   if(data.error)return showError('forgotError',data.error);
   const el=document.getElementById('forgotSuccess');el.textContent='Reset link sent! Check your email.';el.style.display='block';
-}
-
-async function doJoinGame(){
-  hideAlerts();
-  const token=localStorage.getItem('token');
-  if(!token)return showModal('login');
-  const code=document.getElementById('joinCode').value.trim().toUpperCase();
-  const teamName=document.getElementById('joinTeam').value.trim();
-  if(!code)return showError('joinError','Please enter a game code');
-  const data=await apiFetch('/api/game/join',{method:'POST',body:JSON.stringify({code,team_name:teamName||undefined})});
-  if(data.error)return showError('joinError',data.error);
-  const el=document.getElementById('joinSuccess');el.textContent='Joined! Redirecting...';el.style.display='block';
-  setTimeout(()=>window.location.href='/dashboard.html',1000);
 }
 
 function googleAuth(){window.location.href=API+'/api/auth/google'}

@@ -1,6 +1,6 @@
 // api/simulation/get-decisions.js
 import { requireAuth, cors } from '../../lib/auth.js';
-import { GameDB, TeamMemberDB, DecisionDB } from '../../lib/db.js';
+import { GameDB, DecisionDB } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -14,11 +14,11 @@ export default async function handler(req, res) {
     const { game_id, team_id, quarter } = req.query;
     if (!game_id || !team_id) return res.status(400).json({ error: 'Game ID and Team ID required' });
 
-    const members = await TeamMemberDB.findByTeam(team_id);
-    if (!members.some(m => m.user_id === decoded.userId)) return res.status(403).json({ error: 'Not on this team' });
-
     const game = await GameDB.findById(game_id);
     if (!game) return res.status(404).json({ error: 'Game not found' });
+    if (String(game.user_id) !== String(decoded.userId) && !decoded.isAdmin) {
+      return res.status(403).json({ error: 'Not your simulation' });
+    }
 
     const q = quarter !== undefined ? parseInt(quarter) : game.current_quarter;
     const decisions = await DecisionDB.findByTeamAndQuarter(team_id, q);

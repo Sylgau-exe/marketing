@@ -17,13 +17,13 @@ export default async function handler(req, res) {
     const result = await sql`
       SELECT 
         u.id, u.name, u.email, u.organization, u.job_title,
-        u.auth_provider, u.is_admin, u.is_instructor, u.email_verified, u.created_at,
+        u.auth_provider, u.is_admin, u.email_verified, u.created_at,
         u.subscription_tier, u.subscription_status, u.subscription_type, u.decisions_used,
         COALESCE(g.game_count, 0) as games
       FROM users u
       LEFT JOIN (
         SELECT user_id, COUNT(*) as game_count
-        FROM team_members GROUP BY user_id
+        FROM games GROUP BY user_id
       ) g ON u.id = g.user_id
       ORDER BY u.created_at DESC
     `;
@@ -33,7 +33,6 @@ export default async function handler(req, res) {
       organization: r.organization || '-', jobTitle: r.job_title || '-',
       authProvider: r.auth_provider || 'email',
       isAdmin: r.is_admin || false,
-      isInstructor: r.is_instructor || false,
       plan: r.subscription_tier || 'free',
       planStatus: r.subscription_status || 'inactive',
       planType: r.subscription_type || null,
