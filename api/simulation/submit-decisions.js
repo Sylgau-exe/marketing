@@ -125,6 +125,7 @@ export default async function handler(req, res) {
     }
 
     // Process quarter
+    const normalizedPlayerDec = decisionsMap[team_id];
     const engineResult = processQuarter({
       quarter: game.current_quarter,
       teams: engineTeams,
@@ -134,6 +135,29 @@ export default async function handler(req, res) {
 
     // Save results for all teams
     const playerResult = engineResult.results[team_id];
+    
+    // Debug: capture what the engine saw
+    const debugInfo = {
+      playerTeamId: team_id,
+      rawDecisionKeys: Object.keys(playerDecisions),
+      normalizedDecisionKeys: normalizedPlayerDec ? Object.keys(normalizedPlayerDec) : 'MISSING',
+      normalizedPricing: normalizedPlayerDec?.pricing,
+      normalizedDistribution: normalizedPlayerDec?.distribution,
+      normalizedAdvertising: normalizedPlayerDec?.advertising,
+      normalizedSalesforce: normalizedPlayerDec?.salesforce,
+      normalizedInternet: normalizedPlayerDec?.internet,
+      brandsCount: engineTeams.find(t => String(t.id) === String(team_id))?.brands?.length || 0,
+      brandNames: engineTeams.find(t => String(t.id) === String(team_id))?.brands?.map(b => b.name) || [],
+      brandTargets: engineTeams.find(t => String(t.id) === String(team_id))?.brands?.map(b => b.target_segment) || [],
+      segmentNames: segments.map(s => s.name),
+      segmentHasWeights: segments[0] ? { price_sensitivity: segments[0].price_sensitivity, performance_weight: segments[0].performance_weight } : 'NO_SEGMENTS',
+      engineTeamIds: Object.keys(decisionsMap),
+      resultTeamIds: Object.keys(engineResult.results || {}),
+      playerResultExists: !!playerResult,
+      playerDemand: playerResult?.totalDemand,
+      playerRevenue: playerResult?.revenue,
+    };
+    console.log('ENGINE DEBUG:', JSON.stringify(debugInfo, null, 2));
     for (const t of teams) {
       const tr = engineResult.results[t.id];
       if (!tr) continue;
@@ -187,7 +211,8 @@ export default async function handler(req, res) {
         overallSatisfaction: playerResult.overallSatisfaction
       } : null,
       leaderboard,
-      warnings: errors.filter(e => e.severity === 'warning')
+      warnings: errors.filter(e => e.severity === 'warning'),
+      _debug: debugInfo
     });
   } catch (error) {
     console.error('Submit decisions error:', error);

@@ -653,6 +653,9 @@ async function submitDecisions(){
   if(data.code==='PAYWALL'){btn.disabled=false;btn.textContent='Submit Q'+(game.current_quarter||1);showPaywall(data);return;}
   if(data.error){btn.disabled=false;btn.textContent='Submit Q'+(game.current_quarter||1);return alert(data.error);}
 
+  // Debug: log engine diagnostics to console
+  if(data._debug){console.log('🔍 ENGINE DEBUG:',JSON.stringify(data._debug,null,2));}
+
   // Quarter processed! Show results summary
   var r=data.results;
   if(r){
@@ -664,7 +667,14 @@ async function submitDecisions(){
       '📈 Market Share: '+((r.marketShare||0)*100).toFixed(1)+'%\n'+
       '🏆 Scorecard: '+(r.balancedScorecard||0).toFixed(2)+'\n'+
       '🥇 Rank: #'+rank+' of '+(data.leaderboard?.length||1)+'\n\n'+
-      (data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter));
+      (data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+
+      (data._debug?'\n\n--- Debug ---\nBrands: '+JSON.stringify(data._debug.brandNames)+
+      '\nTargets: '+JSON.stringify(data._debug.brandTargets)+
+      '\nSegments: '+JSON.stringify(data._debug.segmentNames)+
+      '\nPricing: '+JSON.stringify(data._debug.normalizedPricing)+
+      '\nDistrib: '+JSON.stringify(data._debug.normalizedDistribution)+
+      '\nDemand: '+data._debug.playerDemand+
+      '\nRevenue: '+data._debug.playerRevenue:''));
   }
   // Reload to show new quarter
   location.reload();
