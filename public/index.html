@@ -6,6 +6,7 @@
 <title>MarketSim Live — Marketing Simulation</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
 :root{--bg:#0a0e1a;--card:#111827;--border:#1e293b;--primary:#3b82f6;--primary-hover:#2563eb;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#e2e8f0;--muted:#94a3b8;--surface:#1e293b}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 a{color:var(--primary);text-decoration:none}
@@ -60,6 +61,31 @@ nav{display:flex;justify-content:space-between;align-items:center;padding:16px 4
 /* Footer */
 footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--border);margin-top:60px}
 
+/* Pricing section */
+.pricing-section{padding:80px 40px;max-width:1100px;margin:0 auto}
+.pricing-section h2{text-align:center;font-size:2rem;margin-bottom:8px}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.pricing-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;position:relative;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
+.pricing-card:hover{transform:translateY(-4px)}
+.pricing-card.featured{border-color:var(--accent);box-shadow:0 0 30px rgba(139,92,246,.15)}
+.best-value{position:absolute;top:-14px;right:24px;background:#10b981;color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:700}
+.plan-name{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.plan-sub{color:var(--muted);font-size:.85rem;margin-bottom:24px}
+.plan-price{margin-bottom:24px}
+.plan-price .amount{font-size:3rem;font-weight:800}
+.plan-price .period{color:var(--muted);font-size:1rem}
+.savings{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,.12);color:#10b981;padding:8px 16px;border-radius:20px;font-size:.82rem;font-weight:600;margin-bottom:20px}
+.plan-features{list-style:none;padding:0;margin:0 0 32px;flex:1}
+.plan-features li{padding:8px 0;font-size:.9rem;color:var(--muted)}
+.plan-features li::before{content:'✓ ';color:#10b981;font-weight:700}
+.plan-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.plan-btn.free{background:var(--border);color:var(--muted)}
+.plan-btn.free:hover{background:#2a2a40;color:var(--text)}
+.plan-btn.pro{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 4px 16px rgba(99,102,241,.3)}
+.plan-btn.pro:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(99,102,241,.4)}
+.plan-btn.lifetime{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+.plan-btn.lifetime:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+
 /* Modal */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
 .modal-overlay.active{display:flex}
@@ -88,8 +114,9 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
 @media(max-width:768px){
   .hero h1{font-size:2.2rem}
   nav{padding:12px 20px}
-  .features,.segments,.how-section{padding:40px 20px}
-  .seg-grid{grid-template-columns:repeat(2,1fr)}
+  .features,.segments,.how-section,.pricing-section{padding:40px 20px}
+  .seg-grid{grid-template-columns:repeat(2,1fr)!important}
+  .pricing-grid{grid-template-columns:1fr!important;max-width:400px;margin:0 auto}
 }
 </style>
 </head>
@@ -98,13 +125,13 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
 <nav>
   <div class="logo">🎯 MarketSim</div>
   <div class="nav-links" id="navLinks">
-    <a href="/pricing.html" style="color:var(--accent);font-size:.9rem;text-decoration:none;font-weight:600">Pricing</a>
+    <a href="#pricing" style="color:var(--accent);font-size:.9rem;text-decoration:none;font-weight:600">Pricing</a>
     <button class="btn btn-outline" onclick="showModal('login')">Log In</button>
     <button class="btn btn-primary" onclick="showModal('register')">Sign Up</button>
   </div>
   <div class="nav-user" id="navUser" style="display:none">
     <span id="navUserName"></span>
-    <a href="/pricing.html" style="color:var(--accent);font-size:.9rem;text-decoration:none;font-weight:600">Pricing</a>
+    <a href="#pricing" style="color:var(--accent);font-size:.9rem;text-decoration:none;font-weight:600">Pricing</a>
     <button class="btn btn-outline" onclick="goToDashboard()">Dashboard</button>
     <button class="btn btn-outline" onclick="logout()">Logout</button>
   </div>
@@ -163,13 +190,63 @@ footer{text-align:center;padding:40px;color:var(--muted);font-size:.85rem;border
 </section>
 
 <section class="segments">
-  <h2>Target Your Market</h2>
-  <div class="seg-grid">
-    <div class="seg-card"><div class="seg-emoji">💼</div><h4>Worker</h4><p>Daily commuters wanting reliability & comfort</p></div>
-    <div class="seg-card"><div class="seg-emoji">🌿</div><h4>Recreation</h4><p>Weekend riders seeking fun & style</p></div>
-    <div class="seg-card"><div class="seg-emoji">🧒</div><h4>Youth</h4><p>Young riders, price-sensitive, durability matters</p></div>
-    <div class="seg-card"><div class="seg-emoji">⛰️</div><h4>Mountain</h4><p>Performance-driven off-road enthusiasts</p></div>
-    <div class="seg-card"><div class="seg-emoji">⚡</div><h4>Speed</h4><p>Competitive cyclists demanding top performance</p></div>
+  <h2>Choose Your Industry</h2>
+  <div class="seg-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="seg-card"><div class="seg-emoji">📱</div><h4>Phone First</h4><p>Launch smartphones in a crowded, fast-moving market</p></div>
+    <div class="seg-card"><div class="seg-emoji">⌚</div><h4>Wearable Edge</h4><p>Pioneer the wearable tech revolution with smartwatches</p></div>
+    <div class="seg-card"><div class="seg-emoji">💻</div><h4>Laptop Empire</h4><p>Build a laptop brand across performance tiers</p></div>
+    <div class="seg-card"><div class="seg-emoji">🥽</div><h4>VR Rush</h4><p>Capture the emerging VR headset market</p></div>
+  </div>
+</section>
+
+<section class="pricing-section" id="pricing">
+  <h2>Simple, Transparent Pricing</h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:40px">Choose the plan that fits your learning goals</p>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-sub">Perfect for trying out</div>
+      <div class="plan-price"><span class="amount">$0</span><span class="period">/forever</span></div>
+      <ul class="plan-features">
+        <li>1 simulation</li>
+        <li>3 quarterly decisions</li>
+        <li>Basic scenarios</li>
+        <li>Score tracking</li>
+        <li>Community support</li>
+      </ul>
+      <button class="plan-btn free" onclick="showModal('register')">Get Started Free</button>
+    </div>
+    <div class="pricing-card">
+      <div class="plan-name">Pro Monthly</div>
+      <div class="plan-sub">For active learners</div>
+      <div class="plan-price"><span class="amount">$19</span><span class="period">/month</span></div>
+      <ul class="plan-features">
+        <li>All simulations</li>
+        <li>All 4 industry scenarios</li>
+        <li>Unlimited decisions</li>
+        <li>Detailed analytics</li>
+        <li>Priority support</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <button class="plan-btn pro" onclick="goToPricing()">Subscribe Now</button>
+    </div>
+    <div class="pricing-card featured">
+      <div class="best-value">Best Value</div>
+      <div class="plan-name">Pro Lifetime</div>
+      <div class="plan-sub">Pay once, own forever</div>
+      <div class="plan-price"><span class="amount">$149</span><span class="period"> one-time</span></div>
+      <div class="savings">🔥 Save $79+ vs 8 months subscription</div>
+      <ul class="plan-features">
+        <li>All simulations</li>
+        <li>All 4 industry scenarios</li>
+        <li>Unlimited decisions</li>
+        <li>Detailed analytics</li>
+        <li>Priority support</li>
+        <li>Lifetime updates</li>
+        <li>No recurring fees</li>
+      </ul>
+      <button class="plan-btn lifetime" onclick="goToPricing()">Get Lifetime Access</button>
+    </div>
   </div>
 </section>
 
@@ -331,6 +408,7 @@ async function doJoinGame(){
 function googleAuth(){window.location.href=API+'/api/auth/google'}
 
 function goToDashboard(){window.location.href='/dashboard.html'}
+function goToPricing(){window.location.href='/pricing.html'}
 
 function logout(){localStorage.removeItem('token');currentUser=null;updateNav()}
 
