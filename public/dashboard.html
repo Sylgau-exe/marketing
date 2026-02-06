@@ -80,6 +80,7 @@ h1{font-size:1.8rem;margin-bottom:4px}
   <a href="/index.html" class="logo">🎯 MarketSim</a>
   <div class="nav-user">
     <span id="userName"></span>
+    <a id="adminLink" href="/admin.html" class="btn btn-outline btn-sm" style="display:none;border-color:var(--yellow);color:var(--yellow)">⚙️ Admin</a>
     <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
   </div>
 </nav>
@@ -133,6 +134,7 @@ async function init() {
   if (!data.user) return window.location.href = '/index.html';
   user = data.user;
   document.getElementById('userName').textContent = user.name;
+  if(user.isAdmin) document.getElementById('adminLink').style.display='inline-flex';
   document.getElementById('greeting').textContent = 'Welcome back, ' + user.name.split(' ')[0] + '!';
   loadScenarios();
   loadGames();
