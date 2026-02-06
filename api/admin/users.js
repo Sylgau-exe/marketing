@@ -18,6 +18,7 @@ export default async function handler(req, res) {
       SELECT 
         u.id, u.name, u.email, u.organization, u.job_title,
         u.auth_provider, u.is_admin, u.is_instructor, u.email_verified, u.created_at,
+        u.subscription_tier, u.subscription_status, u.subscription_type, u.decisions_used,
         COALESCE(g.game_count, 0) as games
       FROM users u
       LEFT JOIN (
@@ -33,6 +34,10 @@ export default async function handler(req, res) {
       authProvider: r.auth_provider || 'email',
       isAdmin: r.is_admin || false,
       isInstructor: r.is_instructor || false,
+      plan: r.subscription_tier || 'free',
+      planStatus: r.subscription_status || 'inactive',
+      planType: r.subscription_type || null,
+      decisionsUsed: r.decisions_used || 0,
       games: parseInt(r.games),
       joined: new Date(r.created_at).toLocaleDateString()
     }));

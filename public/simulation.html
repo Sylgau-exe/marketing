@@ -101,6 +101,35 @@ tr:hover td{background:rgba(59,130,246,.03)}
 .instructor-panel h3{color:var(--accent)}
 
 @media(max-width:900px){.sidebar{width:60px}.sidebar-item span{display:none}.sidebar-label{display:none}}
+/* Paywall modal */
+.paywall-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:pwFadeIn .3s ease}
+@keyframes pwFadeIn{from{opacity:0}to{opacity:1}}
+.paywall-box{background:#fff;border-radius:24px;max-width:460px;width:90%;overflow:hidden;animation:pwSlideUp .3s ease;box-shadow:0 25px 50px rgba(0,0,0,.25)}
+@keyframes pwSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.paywall-header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:32px;text-align:center}
+.paywall-header .pw-icon{font-size:48px;margin-bottom:12px}
+.paywall-header h2{font-size:1.6rem;margin:0 0 6px}
+.paywall-header p{margin:0;opacity:.9;font-size:.95rem}
+.paywall-progress{padding:20px 32px;border-bottom:1px solid #f1f5f9}
+.pw-bar{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-bottom:10px}
+.pw-bar-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:4px}
+.pw-labels{display:flex;justify-content:space-between;font-size:.8rem;color:#64748b}
+.pw-labels .locked{color:#ef4444}
+.paywall-benefits{padding:24px 32px}
+.paywall-benefits h3{margin:0 0 14px;color:#1e293b;font-size:1rem}
+.paywall-benefits ul{list-style:none;padding:0;margin:0}
+.paywall-benefits li{padding:7px 0;color:#475569;font-size:.9rem}
+.paywall-benefits li::before{content:'✓ ';color:#10b981;font-weight:700}
+.paywall-pricing{display:flex;gap:12px;padding:0 32px;margin-bottom:8px}
+.pw-price-card{flex:1;background:#f8fafc;border-radius:12px;padding:16px;text-align:center;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.pw-price-card:hover,.pw-price-card.selected{border-color:#6366f1}
+.pw-price-card .pw-amt{font-size:1.8rem;font-weight:800;color:#1e293b}
+.pw-price-card .pw-per{font-size:.82rem;color:#64748b}
+.pw-price-card .pw-tag{font-size:.7rem;color:#10b981;font-weight:600;margin-top:4px}
+.paywall-actions{padding:20px 32px 28px;display:flex;flex-direction:column;gap:10px}
+.pw-btn-upgrade{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:14px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.pw-btn-upgrade:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(102,126,234,.4)}
+.pw-btn-later{background:none;border:none;color:#64748b;padding:10px;cursor:pointer;font-size:.88rem;font-family:inherit}
 </style>
 </head>
 <body>
@@ -546,10 +575,18 @@ async function submitDecisions(){
   if(!confirm('Submit your decisions for Q'+(game.current_quarter||1)+'? You won\'t be able to change them after.'))return;
   decisions=collectDecisions();
   const data=await apiFetch('/api/simulation/submit-decisions',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,quarter:game.current_quarter,decisions,submit:true})});
+  if(data.code==='PAYWALL'){showPaywall(data);return;}
   if(data.error)return alert(data.error);
   document.getElementById('submitStatus').textContent='✅ Decisions submitted for Q'+(game.current_quarter||1);
   document.getElementById('submitStatus').classList.add('submitted');
 }
+
+function showPaywall(data){
+  document.getElementById('paywallUsed').textContent=data.decisionsUsed||3;
+  document.getElementById('paywallLimit').textContent=data.limit||3;
+  document.getElementById('paywallModal').style.display='flex';
+}
+function closePaywall(){document.getElementById('paywallModal').style.display='none';}
 
 async function createBrand(){
   const name=document.getElementById('brandName').value.trim();
@@ -687,5 +724,46 @@ function esc(s){const d=document.createElement('div');d.textContent=s;return d.i
 
 init();
 </script>
+<!-- Paywall Modal -->
+<div id="paywallModal" class="paywall-overlay" style="display:none">
+  <div class="paywall-box">
+    <div class="paywall-header">
+      <div class="pw-icon">🔒</div>
+      <h2>Free Preview Complete!</h2>
+      <p>You've used <span id="paywallUsed">3</span> of <span id="paywallLimit">3</span> free decisions</p>
+    </div>
+    <div class="paywall-progress">
+      <div class="pw-bar"><div class="pw-bar-fill" style="width:37.5%"></div></div>
+      <div class="pw-labels"><span>Q3 of 8</span><span class="locked">🔒 Q4–Q8 locked</span></div>
+    </div>
+    <div class="paywall-benefits">
+      <h3>Upgrade to unlock:</h3>
+      <ul>
+        <li>Complete all 8 quarters</li>
+        <li>All 4 industry scenarios</li>
+        <li>Unlimited decisions</li>
+        <li>Detailed analytics & leaderboard</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+    <div class="paywall-pricing">
+      <div class="pw-price-card" onclick="location.href='/pricing.html'">
+        <div class="pw-amt">$19</div>
+        <div class="pw-per">/month</div>
+        <div class="pw-tag">Cancel anytime</div>
+      </div>
+      <div class="pw-price-card" onclick="location.href='/pricing.html'">
+        <div class="pw-amt">$149</div>
+        <div class="pw-per">one-time</div>
+        <div class="pw-tag">🔥 Best value</div>
+      </div>
+    </div>
+    <div class="paywall-actions">
+      <button class="pw-btn-upgrade" onclick="location.href='/pricing.html'">🚀 Upgrade to Pro</button>
+      <button class="pw-btn-later" onclick="closePaywall()">Maybe later</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

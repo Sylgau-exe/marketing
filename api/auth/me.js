@@ -36,6 +36,10 @@ export default async function handler(req, res) {
         isAdmin: user.is_admin,
         isInstructor: user.is_instructor,
         authProvider: user.auth_provider,
+        subscriptionTier: user.subscription_tier || 'free',
+        subscriptionStatus: user.subscription_status || 'inactive',
+        subscriptionType: user.subscription_type || null,
+        decisionsUsed: user.decisions_used || 0,
         createdAt: user.created_at,
         gameCount
       }

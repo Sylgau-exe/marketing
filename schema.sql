@@ -213,6 +213,14 @@ CREATE TABLE IF NOT EXISTS admin_activity_log (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Stripe payment columns
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(50) DEFAULT 'free';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'inactive';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_type VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS decisions_used INTEGER DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_users_stripe ON users(stripe_customer_id);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_games_code ON games(code);

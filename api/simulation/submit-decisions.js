@@ -1,6 +1,9 @@
 // api/simulation/submit-decisions.js
+import { sql } from '@vercel/postgres';
 import { requireAuth, cors } from '../../lib/auth.js';
 import { GameDB, TeamDB, TeamMemberDB, DecisionDB } from '../../lib/db.js';
+
+const FREE_DECISION_LIMIT = 3;
 
 export default async function handler(req, res) {
   cors(res);
@@ -26,6 +29,32 @@ export default async function handler(req, res) {
     if (!team) return res.status(404).json({ error: 'Team not found' });
     if (team.has_submitted && submit) return res.status(400).json({ error: 'Already submitted for this quarter' });
 
+    // --- Paywall check on submit ---
+    if (submit) {
+      let userRow;
+      try {
+        const u = await sql`SELECT subscription_tier, subscription_status, decisions_used, is_admin FROM users WHERE id = ${decoded.userId}`;
+        userRow = u.rows[0];
+      } catch(e) { userRow = null; }
+
+      const isPro = userRow && (
+        userRow.is_admin ||
+        (userRow.subscription_tier === 'pro' && userRow.subscription_status === 'active')
+      );
+
+      if (!isPro) {
+        const used = parseInt(userRow?.decisions_used) || 0;
+        if (used >= FREE_DECISION_LIMIT) {
+          return res.status(402).json({
+            error: 'Free plan limit reached',
+            code: 'PAYWALL',
+            decisionsUsed: used,
+            limit: FREE_DECISION_LIMIT
+          });
+        }
+      }
+    }
+
     const errors = validateDecisions(decisions, team, game);
     if (errors.filter(e => e.severity === 'error').length > 0 && submit) return res.status(400).json({ error: 'Validation failed', errors });
 
@@ -41,7 +70,13 @@ export default async function handler(req, res) {
       dividend: decisions.dividend || 0
     });
 
-    if (submit) await TeamDB.setSubmitted(team_id, true);
+    if (submit) {
+      await TeamDB.setSubmitted(team_id, true);
+      // Increment decisions_used counter
+      try {
+        await sql`UPDATE users SET decisions_used = COALESCE(decisions_used, 0) + 1 WHERE id = ${decoded.userId}`;
+      } catch(e) { console.error('Could not increment decisions_used:', e); }
+    }
 
     res.json({ success: true, saved: true, submitted: submit, warnings: errors.filter(e => e.severity === 'warning'), quarter: game.current_quarter });
   } catch (error) {

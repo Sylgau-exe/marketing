@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — MarketSim</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#131825;--border:#1e293b;--primary:#6366f1;--accent:#8b5cf6;--green:#10b981;--text:#e2e8f0;--muted:#94a3b8;--dim:#64748b}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+nav{display:flex;justify-content:space-between;align-items:center;padding:16px 40px;border-bottom:1px solid var(--border)}
+.logo{font-size:1.4rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.logo .brand{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{color:var(--muted);font-size:.9rem;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.btn{padding:8px 20px;border-radius:8px;border:none;font-weight:600;font-size:.85rem;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+
+/* Hero */
+.hero{text-align:center;padding:60px 20px 40px}
+.hero h1{font-size:2.8rem;font-weight:800;margin-bottom:12px}
+.hero p{font-size:1.1rem;color:var(--muted)}
+
+/* Pricing cards */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto;padding:0 40px 80px}
+.pricing-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px;position:relative;display:flex;flex-direction:column;transition:transform .3s,box-shadow .3s}
+.pricing-card:hover{transform:translateY(-4px)}
+.pricing-card.featured{border-color:var(--accent);box-shadow:0 0 30px rgba(139,92,246,.15)}
+.pricing-card .best-badge{position:absolute;top:-14px;right:24px;background:var(--green);color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:700}
+.plan-name{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.plan-sub{color:var(--dim);font-size:.88rem;margin-bottom:24px}
+.plan-price{margin-bottom:24px}
+.plan-price .amount{font-size:3.2rem;font-weight:800}
+.plan-price .period{color:var(--dim);font-size:1rem}
+.savings-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,.12);color:var(--green);padding:8px 16px;border-radius:20px;font-size:.82rem;font-weight:600;margin-bottom:20px}
+.features{list-style:none;padding:0;margin:0 0 32px;flex:1}
+.features li{padding:10px 0;font-size:.92rem;color:var(--muted);display:flex;align-items:center;gap:10px}
+.features li::before{content:'✓';color:var(--green);font-weight:700;font-size:1rem}
+.plan-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.plan-btn.current{background:var(--border);color:var(--muted);cursor:default}
+.plan-btn.subscribe{background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;box-shadow:0 4px 16px rgba(99,102,241,.3)}
+.plan-btn.subscribe:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(99,102,241,.4)}
+.plan-btn.lifetime{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+.plan-btn.lifetime:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(124,58,237,.4)}
+.plan-btn:disabled{opacity:.6;cursor:not-allowed;transform:none!important}
+
+/* Currently active badge */
+.current-badge{display:inline-flex;padding:4px 12px;background:rgba(99,102,241,.15);color:var(--primary);border-radius:20px;font-size:.75rem;font-weight:600;margin-bottom:12px}
+
+/* Footer */
+.footer{text-align:center;padding:40px;color:var(--dim);font-size:.85rem;border-top:1px solid var(--border)}
+
+@media(max-width:768px){.pricing-grid{grid-template-columns:1fr;max-width:400px} .hero h1{font-size:2rem}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/index.html" class="logo"><span>🎯</span><span class="brand">MarketSim</span></a>
+  <div class="nav-links">
+    <a href="/dashboard.html">Dashboard</a>
+    <span id="userName" style="color:var(--muted);font-size:.9rem"></span>
+    <button class="btn btn-outline" onclick="localStorage.removeItem('token');location.href='/index.html'">Logout</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Simple, Transparent Pricing</h1>
+  <p>Choose the plan that fits your learning goals</p>
+</div>
+
+<div class="pricing-grid">
+  <!-- Free -->
+  <div class="pricing-card" id="cardFree">
+    <div class="plan-name">Free</div>
+    <div class="plan-sub">Perfect for trying out</div>
+    <div class="plan-price"><span class="amount">$0</span><span class="period">/forever</span></div>
+    <ul class="features">
+      <li>1 simulation</li>
+      <li>3 quarterly decisions</li>
+      <li>Basic scenarios</li>
+      <li>Score tracking</li>
+      <li>Community support</li>
+    </ul>
+    <button class="plan-btn current" id="btnFree">Current Plan</button>
+  </div>
+
+  <!-- Pro Monthly -->
+  <div class="pricing-card" id="cardMonthly">
+    <div class="plan-name">Pro Monthly</div>
+    <div class="plan-sub">For active learners</div>
+    <div class="plan-price"><span class="amount">$19</span><span class="period">/month</span></div>
+    <ul class="features">
+      <li>All simulations</li>
+      <li>All 4 industry scenarios</li>
+      <li>Unlimited decisions</li>
+      <li>Detailed analytics</li>
+      <li>Priority support</li>
+      <li>Cancel anytime</li>
+    </ul>
+    <button class="plan-btn subscribe" id="btnMonthly" onclick="checkout('monthly')">Subscribe Now</button>
+  </div>
+
+  <!-- Pro Lifetime -->
+  <div class="pricing-card featured" id="cardLifetime">
+    <div class="best-badge">Best Value</div>
+    <div class="plan-name">Pro Lifetime</div>
+    <div class="plan-sub">Best value — pay once, own forever</div>
+    <div class="plan-price"><span class="amount">$149</span><span class="period"> one-time</span></div>
+    <div class="savings-badge">🔥 Save $79+ vs 8 months subscription</div>
+    <ul class="features">
+      <li>All simulations</li>
+      <li>All 4 industry scenarios</li>
+      <li>Unlimited decisions</li>
+      <li>Detailed analytics</li>
+      <li>Priority support</li>
+      <li>Lifetime updates</li>
+      <li>No recurring fees</li>
+    </ul>
+    <button class="plan-btn lifetime" id="btnLifetime" onclick="checkout('lifetime')">Get Lifetime Access</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Powered by Stripe. Secure payment processing. All prices in USD.</p>
+</div>
+
+<script>
+const API = window.location.origin;
+function headers() {
+  const h = { 'Content-Type': 'application/json' };
+  const t = localStorage.getItem('token');
+  if (t) h['Authorization'] = 'Bearer ' + t;
+  return h;
+}
+
+// Price IDs — set these after creating products in Stripe
+const PRICE_IDS = {
+  monthly: window.STRIPE_PRICE_MONTHLY || 'PRICE_ID_MONTHLY_PLACEHOLDER',
+  lifetime: window.STRIPE_PRICE_LIFETIME || 'PRICE_ID_LIFETIME_PLACEHOLDER'
+};
+
+async function init() {
+  try {
+    const res = await fetch(API + '/api/auth/me', { headers: headers() });
+    const data = await res.json();
+    if (!data.user) { location.href = '/index.html'; return; }
+
+    document.getElementById('userName').textContent = data.user.name;
+    const tier = data.user.subscriptionTier || 'free';
+    const type = data.user.subscriptionType;
+    const status = data.user.subscriptionStatus;
+
+    if (tier === 'pro' && status === 'active') {
+      // Already paid — show current plan
+      if (type === 'lifetime') {
+        document.getElementById('btnLifetime').textContent = 'Current Plan';
+        document.getElementById('btnLifetime').className = 'plan-btn current';
+        document.getElementById('btnLifetime').disabled = true;
+        document.getElementById('btnMonthly').style.display = 'none';
+        document.getElementById('cardLifetime').insertAdjacentHTML('afterbegin', '<div class="current-badge">✓ Active</div>');
+      } else {
+        document.getElementById('btnMonthly').textContent = 'Current Plan';
+        document.getElementById('btnMonthly').className = 'plan-btn current';
+        document.getElementById('btnMonthly').disabled = true;
+        document.getElementById('cardMonthly').insertAdjacentHTML('afterbegin', '<div class="current-badge">✓ Active</div>');
+      }
+      document.getElementById('btnFree').style.display = 'none';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function checkout(plan) {
+  const btn = document.getElementById(plan === 'lifetime' ? 'btnLifetime' : 'btnMonthly');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Redirecting...';
+
+  try {
+    const priceId = PRICE_IDS[plan];
+    if (priceId.includes('PLACEHOLDER')) {
+      alert('Stripe price IDs not configured yet. See setup instructions.');
+      btn.disabled = false;
+      btn.textContent = origText;
+      return;
+    }
+
+    const res = await fetch(API + '/api/checkout/create-session', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        priceId,
+        mode: plan === 'lifetime' ? 'payment' : 'subscription'
+      })
+    });
+
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Failed to create checkout');
+    }
+  } catch (err) {
+    alert('Checkout error: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
+}
+
+// Check for cancelled payment
+const params = new URLSearchParams(window.location.search);
+if (params.get('payment') === 'cancelled') {
+  // Could show a toast, but keep it simple
+  window.history.replaceState({}, '', '/pricing.html');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -23,6 +23,9 @@
     { "source": "/api/simulation/market-research", "destination": "/api/simulation/market-research.js" },
     { "source": "/api/simulation/leaderboard", "destination": "/api/simulation/leaderboard.js" },
     { "source": "/api/team/brands", "destination": "/api/team/brands.js" },
-    { "source": "/api/team/members", "destination": "/api/team/members.js" }
+    { "source": "/api/team/members", "destination": "/api/team/members.js" },
+    { "source": "/api/checkout/create-session", "destination": "/api/checkout/create-session.js" },
+    { "source": "/api/checkout/portal", "destination": "/api/checkout/portal.js" },
+    { "source": "/api/webhooks/stripe", "destination": "/api/webhooks/stripe.js" }
   ]
 }
