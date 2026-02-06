@@ -556,14 +556,29 @@ async function init(){
 
 async function startCampaign(){
   const btn=document.getElementById('startBtn');
+  // If we already have a game ID (continue or just joined), go directly
   if(btn.dataset.gameId){window.location.href='/simulation.html?game='+btn.dataset.gameId;return}
-  btn.innerHTML='<span class="spinner"></span> Matching you with opponents...';
+  btn.innerHTML='<span class="spinner"></span> Setting up your company...';
   btn.disabled=true;
-  const data=await apiFetch('/api/game/quick-join',{method:'POST',body:JSON.stringify({scenarioId})});
-  if(data.error){alert(data.error);btn.innerHTML='🚀 Start Campaign';btn.disabled=false;return}
-  btn.innerHTML='✓ Joined as '+(data.team?.name||'your team')+'!';
-  btn.style.background='var(--green)';
-  setTimeout(()=>{window.location.href='/simulation.html?game='+data.game.id},1000);
+  try{
+    const data=await apiFetch('/api/game/quick-join',{method:'POST',body:JSON.stringify({scenarioId})});
+    if(data.error){alert(data.error);btn.innerHTML='🚀 Start Campaign';btn.disabled=false;return}
+    // Get game ID from response (handle both fresh and alreadyStarted cases)
+    const gameId=data.game?.id||data.game_id;
+    if(!gameId){console.error('No game ID in response:',data);alert('Failed to get game ID. Please try again.');btn.innerHTML='🚀 Start Campaign';btn.disabled=false;return}
+    // Store game ID so clicking again works
+    btn.dataset.gameId=gameId;
+    btn.innerHTML='✓ Joined as '+(data.team?.name||'your team')+'! Click to continue →';
+    btn.style.background='var(--green)';
+    btn.disabled=false;
+    // Auto-redirect after 1.5s
+    setTimeout(()=>{window.location.href='/simulation.html?game='+gameId},1500);
+  }catch(e){
+    console.error('Start campaign error:',e);
+    alert('Failed to start: '+e.message);
+    btn.innerHTML='🚀 Start Campaign';
+    btn.disabled=false;
+  }
 }
 
 init();
