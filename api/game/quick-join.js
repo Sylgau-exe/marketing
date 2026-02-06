@@ -8,12 +8,12 @@ import { generateGameCode } from '../../lib/simulation-engine.js';
 const SCENARIOS = {
   'local-launch': {
     id: 'local-launch',
-    name: 'Local Launch',
-    tagline: 'Start small, think big',
-    description: 'Launch your bike brand in Latin America targeting commuters and recreational riders. A great first scenario to learn the fundamentals.',
+    name: 'Phone First',
+    tagline: 'Launch a smartphone brand in emerging markets',
+    description: 'Build an affordable smartphone brand for Latin America. Target budget-conscious first-time buyers and social media enthusiasts. A great first scenario to learn the fundamentals.',
     difficulty: 'Beginner',
     difficultyColor: '#10b981',
-    icon: '🚲',
+    icon: '📱',
     maxTeams: 4,
     settings: {
       quarterDuration: 7,
@@ -28,12 +28,12 @@ const SCENARIOS = {
   },
   'mountain-expedition': {
     id: 'mountain-expedition',
-    name: 'Mountain Expedition',
-    tagline: 'Conquer the European trails',
-    description: 'Build premium mountain and adventure bikes for the European market. Balance quality and price as competitors fight for trail dominance.',
+    name: 'Wearable Edge',
+    tagline: 'Smart wearables for the European health & fitness market',
+    description: 'Build smart wearables for European athletes, health-conscious buyers, and tech enthusiasts. Balance performance, comfort, and trust in a sophisticated market.',
     difficulty: 'Intermediate',
     difficultyColor: '#f59e0b',
-    icon: '🏔️',
+    icon: '⌚',
     maxTeams: 6,
     settings: {
       quarterDuration: 7,
@@ -48,12 +48,12 @@ const SCENARIOS = {
   },
   'global-domination': {
     id: 'global-domination',
-    name: 'Global Domination',
-    tagline: 'Every market, every segment',
-    description: 'The full challenge. Expand across 3 regions, serve 5 customer segments, and outmaneuver competitors on every front. This is the complete experience.',
+    name: 'Laptop Empire',
+    tagline: 'Build a global laptop brand across 3 continents',
+    description: 'The full challenge. Launch laptops across 3 regions for 5 customer segments — from budget students to creative pros and gamers. Maximum complexity, maximum reward.',
     difficulty: 'Advanced',
     difficultyColor: '#ef4444',
-    icon: '🌍',
+    icon: '💻',
     maxTeams: 6,
     settings: {
       quarterDuration: 7,
@@ -68,12 +68,12 @@ const SCENARIOS = {
   },
   'speed-innovation': {
     id: 'speed-innovation',
-    name: 'Speed & Innovation',
-    tagline: 'Push the limits in Asia-Pacific',
-    description: 'Target tech-savvy youth and speed enthusiasts in APAC. Heavy R&D investment and cutting-edge designs are the key to winning this race.',
+    name: 'VR Rush',
+    tagline: 'Next-gen gaming headsets for Asia-Pacific',
+    description: 'Target hardcore gamers and casual VR users in APAC — the world\'s largest gaming market. Heavy R&D and bold marketing are the keys to winning this race.',
     difficulty: 'Advanced',
     difficultyColor: '#ef4444',
-    icon: '⚡',
+    icon: '🥽',
     maxTeams: 4,
     settings: {
       quarterDuration: 7,
@@ -89,12 +89,12 @@ const SCENARIOS = {
 };
 
 const TEAM_NAMES = [
-  'Carbon Riders', 'Velocity Labs', 'Summit Cycles', 'Trail Blazers',
-  'Pedal Force', 'Aero Dynamics', 'Chain Reaction', 'Spoke & Hub',
-  'Gravity Works', 'Titanium Shift', 'Apex Gears', 'Iron Peloton',
-  'Drift Collective', 'Torque Studio', 'Crank Theory', 'Frame Works',
-  'Velo Ventures', 'Spin Factor', 'Glide Path', 'Stealth Bikes',
-  'Night Riders', 'Wind Chasers', 'Peak Performance', 'Breakaway Co'
+  'Pixel Labs', 'Circuit Ventures', 'Quantum Forge', 'Nova Systems',
+  'Byte Force', 'Signal Works', 'Horizon Tech', 'Ember Studio',
+  'Atlas Digital', 'Prism Group', 'Apex Devices', 'Ionic Labs',
+  'Flux Dynamics', 'Zenith Co', 'Pulse Factory', 'Vertex Labs',
+  'Echo Systems', 'Neon Collective', 'Cipher Works', 'Stealth Tech',
+  'Orbit Labs', 'Warp Studio', 'Core Dynamics', 'Spark Ventures'
 ];
 
 function corsHeaders(res) {
@@ -102,6 +102,14 @@ function corsHeaders(res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 }
+
+// Friendly segment names per scenario
+const SEGMENT_LABELS = {
+  'local-launch': { Worker: 'Budget Buyers', Recreation: 'Social Connectors' },
+  'mountain-expedition': { Mountain: 'Athletes', Recreation: 'Health-Conscious', Speed: 'Tech Enthusiasts' },
+  'global-domination': { Worker: 'Business Pros', Recreation: 'Students', Youth: 'Casual Users', Mountain: 'Creative Pros', Speed: 'Gamers' },
+  'speed-innovation': { Speed: 'Hardcore Gamers', Youth: 'Casual Gamers' }
+};
 
 export default async function handler(req, res) {
   corsHeaders(res);
@@ -120,7 +128,7 @@ export default async function handler(req, res) {
         icon: s.icon,
         maxTeams: s.maxTeams,
         regions: s.settings.regionsAvailable,
-        segments: s.settings.segmentsAvailable
+        segments: s.settings.segmentsAvailable.map(seg => (SEGMENT_LABELS[s.id]||{})[seg] || seg)
       }))
     });
   }

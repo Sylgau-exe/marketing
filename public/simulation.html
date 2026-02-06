@@ -107,7 +107,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
 
 <div class="topbar">
   <div class="topbar-left">
-    <a href="/dashboard.html" class="logo">🚴 MarketSim</a>
+    <a href="/dashboard.html" class="logo">🎯 MarketSim</a>
     <div class="game-info">
       <span id="gameName">Loading...</span>
       <span class="code" id="gameCode">---</span>
@@ -176,7 +176,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
       <div class="panel">
         <h3>Design a New Brand</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-          <div><label style="font-size:.8rem;color:var(--muted)">Brand Name</label><input type="text" id="brandName" placeholder="e.g. Velocity Pro" style="width:100%;margin-top:4px"></div>
+          <div><label style="font-size:.8rem;color:var(--muted)">Brand Name</label><input type="text" id="brandName" placeholder="e.g. Nova X1" style="width:100%;margin-top:4px"></div>
           <div><label style="font-size:.8rem;color:var(--muted)">Target Segment</label><select id="brandSegment" style="width:100%;margin-top:4px"><option value="Worker">Worker</option><option value="Recreation">Recreation</option><option value="Youth">Youth</option><option value="Mountain">Mountain</option><option value="Speed">Speed</option></select></div>
         </div>
         <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Set component quality (0=None, 1=Basic, 5=Premium). Higher quality increases cost but improves brand appeal.</p>
@@ -355,7 +355,40 @@ const gameId=new URLSearchParams(location.search).get('game');
 let user=null,game=null,team=null,brands=[],decisions={},results=null;
 
 const COMPONENTS=['frame','wheels','drivetrain','brakes','suspension','seat','handlebars','electronics'];
-const COMPONENT_LABELS={frame:'🖼️ Frame',wheels:'🔵 Wheels',drivetrain:'⚙️ Drivetrain',brakes:'🛑 Brakes',suspension:'🔧 Suspension',seat:'💺 Seat',handlebars:'🎯 Handlebars',electronics:'💡 Electronics'};
+
+// Product-specific component labels per scenario
+const PRODUCT_LABELS={
+  'local-launch':{
+    frame:'🏗️ Build Quality', wheels:'📱 Display', drivetrain:'⚡ Processor', brakes:'🔋 Battery',
+    suspension:'📸 Camera', seat:'🖥️ Software', handlebars:'💾 Storage', electronics:'📡 Connectivity',
+    productName:'Smartphone',
+    segments:{Worker:'Budget Buyers',Recreation:'Social Connectors'}
+  },
+  'mountain-expedition':{
+    frame:'🛡️ Case Design', wheels:'📱 Display', drivetrain:'❤️ Sensors', brakes:'🔋 Battery Life',
+    suspension:'💪 Durability', seat:'🤲 Comfort & Fit', handlebars:'✨ Style & Design', electronics:'📡 Connectivity',
+    productName:'Wearable',
+    segments:{Mountain:'Athletes',Recreation:'Health-Conscious',Speed:'Tech Enthusiasts'}
+  },
+  'global-domination':{
+    frame:'🏗️ Build Quality', wheels:'🖥️ Display', drivetrain:'⚡ Processor', brakes:'🔋 Battery',
+    suspension:'🎮 Graphics Card', seat:'⌨️ Keyboard', handlebars:'💾 Storage', electronics:'📡 Connectivity',
+    productName:'Laptop',
+    segments:{Worker:'Business Pros',Recreation:'Students',Youth:'Casual Users',Mountain:'Creative Pros',Speed:'Gamers'}
+  },
+  'speed-innovation':{
+    frame:'🛡️ Build Quality', wheels:'👁️ Display / Optics', drivetrain:'⚡ Processor', brakes:'🎯 Motion Tracking',
+    suspension:'🔊 Audio System', seat:'🤲 Comfort', handlebars:'🎮 Software / Content', electronics:'📡 Connectivity',
+    productName:'VR Headset',
+    segments:{Speed:'Hardcore Gamers',Youth:'Casual Gamers'}
+  }
+};
+
+// Fallback labels
+const DEFAULT_LABELS={frame:'🏗️ Component 1',wheels:'🔵 Component 2',drivetrain:'⚙️ Component 3',brakes:'🛑 Component 4',suspension:'🔧 Component 5',seat:'💺 Component 6',handlebars:'🎯 Component 7',electronics:'💡 Component 8',productName:'Product'};
+
+function getComponentLabels(scenario){return PRODUCT_LABELS[scenario]||DEFAULT_LABELS;}
+let COMPONENT_LABELS=DEFAULT_LABELS;
 const REGIONS=['LATAM','Europe','APAC'];
 
 async function apiFetch(url,opts={}){
@@ -410,6 +443,21 @@ async function init(){
   game=gameData.game;
   team=gameData.team;
   brands=gameData.brands||[];
+  // Set product-specific component labels based on scenario
+  COMPONENT_LABELS=getComponentLabels(game.market_scenario);
+  // Update segment dropdowns with product-specific names
+  const segLabels=COMPONENT_LABELS.segments||{};
+  ['brandSegment','adTarget'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    sel.innerHTML='';
+    Object.keys(segLabels).forEach(key=>{
+      const opt=document.createElement('option');
+      opt.value=key;
+      opt.textContent=segLabels[key];
+      sel.appendChild(opt);
+    });
+  });
 
   document.getElementById('gameName').textContent=game.name||game.code||'Game';
   document.getElementById('gameCode').textContent=game.code||'';
@@ -437,7 +485,7 @@ function loadBrandList(){
   const container=document.getElementById('brandList');
   if(!brands.length){container.innerHTML='<p style="color:var(--muted);font-size:.85rem">No brands yet.</p>';return}
   container.innerHTML=`<table><thead><tr><th>Brand</th><th>Segment</th><th>Quality</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>${
-    brands.map(b=>`<tr><td><strong>${esc(b.name)}</strong></td><td>${b.target_segment}</td><td>${(b.overall_quality||0).toFixed(1)}</td><td>$${Number(b.unit_cost||0).toLocaleString()}</td><td>${b.is_active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--muted)">Inactive</span>'}</td></tr>`).join('')
+    brands.map(b=>{const segName=(COMPONENT_LABELS.segments||{})[b.target_segment]||b.target_segment;return `<tr><td><strong>${esc(b.name)}</strong></td><td>${segName}</td><td>${(b.overall_quality||0).toFixed(1)}</td><td>$${Number(b.unit_cost||0).toLocaleString()}</td><td>${b.is_active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--muted)">Inactive</span>'}</td></tr>`}).join('')
   }</tbody></table>`;
   updatePricingTable();
   updateProductionTable();

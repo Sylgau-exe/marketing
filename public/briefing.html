@@ -3,51 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campaign Brief — MarketSim Live</title>
+<title>Campaign Brief — MarketSim</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#f0f2f5;--card:#ffffff;--border:#e2e8f0;--primary:#3b82f6;--primary-hover:#2563eb;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#1e293b;--muted:#64748b;--surface:#f8fafc;--dark-bg:#0a0e1a}
+:root{--bg:#f0f2f5;--card:#fff;--border:#e2e8f0;--primary:#3b82f6;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#1e293b;--muted:#64748b;--surface:#f8fafc;--dark:#0a0e1a}
 body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
-/* Top bar */
-.topbar{background:var(--dark-bg);padding:12px 40px;display:flex;align-items:center;justify-content:space-between}
+.topbar{background:var(--dark);padding:12px 40px;display:flex;align-items:center;justify-content:space-between}
 .topbar a{color:#94a3b8;text-decoration:none;font-size:.9rem;display:flex;align-items:center;gap:6px;transition:color .2s}
 .topbar a:hover{color:#e2e8f0}
 .topbar .logo{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-/* Header */
 .brief-header{background:var(--card);border-bottom:1px solid var(--border);padding:32px 0 0}
 .brief-header-inner{max-width:900px;margin:0 auto;padding:0 40px}
 .scenario-badge{display:flex;align-items:center;gap:16px;margin-bottom:24px}
 .scenario-icon-lg{width:72px;height:72px;border-radius:16px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2.4rem}
-.scenario-title{font-size:1.8rem;font-weight:700;color:var(--text)}
+.scenario-title{font-size:1.8rem;font-weight:700}
 .scenario-subtitle{color:var(--primary);font-size:.95rem;font-weight:500;margin-top:2px}
-.difficulty-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:8px}
-
-/* Tabs */
-.tabs{display:flex;gap:0;margin-top:24px;border-bottom:none}
+.difficulty-pill{display:inline-flex;padding:4px 14px;border-radius:20px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:8px}
+.tabs{display:flex;gap:0;margin-top:24px}
 .tab{padding:14px 24px;font-size:.95rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;user-select:none}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
-
-/* Content */
 .brief-content{max-width:900px;margin:0 auto;padding:32px 40px 120px}
 .tab-panel{display:none;animation:fadeIn .3s ease}
 .tab-panel.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
-.content-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 40px;margin-bottom:24px}
-
-.content-card h2{font-size:1.35rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
-.content-card h2 .highlight{color:var(--primary)}
-.content-card h3{font-size:1.1rem;font-weight:600;margin:28px 0 12px;padding-top:20px;border-top:1px solid var(--border)}
-.content-card h3:first-of-type{border-top:none;margin-top:20px;padding-top:0}
-.content-card p{color:var(--muted);line-height:1.7;margin-bottom:14px;font-size:.95rem}
-.content-card p strong{color:var(--text)}
-.content-card blockquote{border-left:3px solid var(--primary);padding:16px 20px;margin:20px 0;background:rgba(59,130,246,.04);border-radius:0 10px 10px 0}
-.content-card blockquote p{color:var(--text);font-style:italic;margin:0;font-size:1.05rem}
-
-/* Metric table */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 40px;margin-bottom:24px}
+.card h2{font-size:1.35rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.card h2 .hl{color:var(--primary)}
+.card h3{font-size:1.1rem;font-weight:600;margin:28px 0 12px;padding-top:20px;border-top:1px solid var(--border)}
+.card h3:first-of-type{border-top:none;margin-top:20px;padding-top:0}
+.card p{color:var(--muted);line-height:1.7;margin-bottom:14px;font-size:.95rem}
+.card p strong{color:var(--text)}
+.card blockquote{border-left:3px solid var(--primary);padding:16px 20px;margin:20px 0;background:rgba(59,130,246,.04);border-radius:0 10px 10px 0}
+.card blockquote p{color:var(--text);font-style:italic;margin:0;font-size:1.05rem}
 .metric-grid{display:flex;flex-direction:column;gap:0;margin:20px 0}
 .metric-row{display:grid;grid-template-columns:200px 80px 1fr;gap:16px;padding:14px 16px;border-bottom:1px solid var(--border);align-items:center}
 .metric-row:last-child{border-bottom:none}
@@ -55,355 +43,527 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .metric-name{font-weight:600;font-size:.9rem}
 .metric-impact{font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:6px;text-align:center;width:fit-content}
 .impact-high{background:rgba(239,68,68,.1);color:var(--red)}
-.impact-medium{background:rgba(245,158,11,.1);color:var(--yellow)}
+.impact-med{background:rgba(245,158,11,.1);color:var(--yellow)}
 .metric-desc{color:var(--muted);font-size:.88rem;line-height:1.4}
-
-/* Decision cards */
-.decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
-.decision-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px}
-.decision-icon{font-size:1.3rem;margin-top:2px}
-.decision-label{font-weight:600;font-size:.9rem;margin-bottom:3px}
-.decision-desc{color:var(--muted);font-size:.82rem;line-height:1.4}
-
-/* Segment cards */
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.ditem{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px}
+.ditem .icon{font-size:1.3rem;margin-top:2px}
+.ditem .label{font-weight:600;font-size:.9rem;margin-bottom:3px}
+.ditem .desc{color:var(--muted);font-size:.82rem;line-height:1.4}
 .segment-grid{display:flex;flex-direction:column;gap:12px;margin:20px 0}
-.segment-row{display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
-.segment-dot{width:12px;height:12px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.segment-name{font-weight:600;font-size:.92rem;margin-bottom:3px}
-.segment-profile{color:var(--muted);font-size:.82rem;font-style:italic;margin-bottom:4px}
-.segment-values{color:var(--muted);font-size:.85rem;line-height:1.4}
-
-/* Scenario details */
+.seg-row{display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;position:relative}
+.seg-dot{width:12px;height:12px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.seg-name{font-weight:600;font-size:.92rem;margin-bottom:3px}
+.seg-profile{color:var(--muted);font-size:.82rem;font-style:italic;margin-bottom:4px}
+.seg-values{color:var(--muted);font-size:.85rem;line-height:1.4}
 .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
 .detail-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
 .detail-box .value{font-size:1.5rem;font-weight:700;color:var(--primary);margin-bottom:4px}
 .detail-box .label{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-
-/* Tips */
 .tip-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
 .tip-item:last-child{border-bottom:none}
-.tip-bullet{color:var(--primary);font-weight:700;font-size:1.1rem;margin-top:-1px;flex-shrink:0}
+.tip-bullet{color:var(--primary);font-weight:700;font-size:1.1rem;flex-shrink:0}
 .tip-text{color:var(--muted);font-size:.9rem;line-height:1.6}
 .tip-text strong{color:var(--text)}
-
-/* CTA Footer */
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+.comp-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.comp-num{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.comp-name{font-weight:600;font-size:.88rem}
+.comp-desc{color:var(--muted);font-size:.78rem}
 .cta-footer{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:16px 40px;display:flex;align-items:center;justify-content:center;gap:16px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.05)}
 .cta-btn{padding:14px 48px;border-radius:12px;border:none;font-weight:700;font-size:1rem;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--primary),var(--accent));transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:8px}
 .cta-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,.3)}
 .cta-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 .cta-secondary{padding:14px 32px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s}
 .cta-secondary:hover{border-color:var(--primary);color:var(--primary)}
-
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
-
-/* Inactive segments */
-.segment-row.inactive{opacity:.45}
-.segment-row.inactive::after{content:'Not in this scenario';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--muted);font-style:italic}
-.segment-row{position:relative}
-
-@media(max-width:768px){
-  .topbar{padding:12px 20px}
-  .brief-header-inner{padding:0 20px}
-  .brief-content{padding:24px 20px 120px}
-  .content-card{padding:24px 20px}
-  .metric-row{grid-template-columns:1fr;gap:4px}
-  .decision-grid{grid-template-columns:1fr}
-  .detail-grid{grid-template-columns:1fr}
-  .tabs{overflow-x:auto}
-}
+.step-flow{display:grid;grid-template-columns:1fr;gap:12px;margin:20px 0}
+.step-item{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-size:.85rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-label{font-weight:600;font-size:.9rem;margin-bottom:3px}
+.step-desc{color:var(--muted);font-size:.82rem;line-height:1.4}
+@media(max-width:768px){.topbar{padding:12px 20px}.brief-header-inner,.brief-content{padding:0 20px}.card{padding:24px 20px}.metric-row{grid-template-columns:1fr;gap:4px}.dgrid,.comp-grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.tabs{overflow-x:auto}}
 </style>
 </head>
 <body>
-
 <div class="topbar">
-  <span class="logo">🚴 MarketSim Live</span>
+  <span class="logo">🎯 MarketSim</span>
   <a href="/dashboard.html">← Back to Dashboard</a>
 </div>
-
 <div class="brief-header">
   <div class="brief-header-inner">
     <div class="scenario-badge">
-      <div class="scenario-icon-lg" id="scenarioIcon">🚲</div>
+      <div class="scenario-icon-lg" id="sIcon">📱</div>
       <div>
-        <div class="scenario-title" id="scenarioTitle">Loading...</div>
-        <div class="scenario-subtitle" id="scenarioSubtitle">MarketSim Campaign</div>
-        <div class="difficulty-pill" id="difficultyPill" style="background:rgba(16,185,129,.1);color:#10b981">Beginner</div>
+        <div class="scenario-title" id="sTitle">Loading...</div>
+        <div class="scenario-subtitle" id="sTagline">MarketSim Campaign</div>
+        <div class="difficulty-pill" id="sDifficulty">—</div>
       </div>
     </div>
-    <div class="tabs" id="tabsContainer">
+    <div class="tabs">
       <div class="tab active" data-tab="brief">Campaign Brief</div>
-      <div class="tab" data-tab="scenario">Scenario Objectives</div>
+      <div class="tab" data-tab="scenario">Scenario Details</div>
       <div class="tab" data-tab="guide">Strategy Guide</div>
     </div>
   </div>
 </div>
-
 <div class="brief-content">
-
-  <!-- TAB 1: Campaign Brief -->
-  <div class="tab-panel active" id="panel-brief">
-    <div class="content-card">
-      <h2>Campaign Brief: <span class="highlight" id="briefScenarioName">Carbon Fiber Bikes</span></h2>
-      <p>You have just been appointed to lead the marketing division of a major international bicycle company. Your parent company has developed two breakthrough technologies: an economical new form of carbon fiber and an advanced 3D printer that can produce a custom bike frame in hours, not days.</p>
-      <p>Gone is the cluttered bike store filled with dozens of ill-fitting bikes. In its place: a sleek showroom of carefully crafted models and a fitting area where every bike is tailored to the rider. The hassle of choosing the right bike becomes a premium experience.</p>
-      <blockquote><p>"Will buyers pay the premium for a lightweight, custom carbon fiber bike?"</p></blockquote>
-      <p>Nobody knows yet. That is your challenge. Over <strong>8 quarters</strong> of simulated business, you will build this division from scratch, prove the concept in the market, and deliver returns to your parent company.</p>
-
-      <h3>📊 Your Balanced Scorecard</h3>
-      <p>Your performance is measured by five dimensions. You cannot chase profit at the expense of customers, or grow market share while burning cash. The best teams excel across all areas:</p>
-      <div class="metric-grid">
-        <div class="metric-row header"><span>Metric</span><span>Impact</span><span>What It Measures</span></div>
-        <div class="metric-row"><span class="metric-name">Financial Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Operating profit relative to total revenue. Can you run a profitable business?</span></div>
-        <div class="metric-row"><span class="metric-name">Market Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Your market share in target segments. Are you winning customers where it counts?</span></div>
-        <div class="metric-row"><span class="metric-name">Marketing Effectiveness</span><span class="metric-impact impact-medium">Medium</span><span class="metric-desc">Customer satisfaction with your brands and advertising. Do people love what you offer?</span></div>
-        <div class="metric-row"><span class="metric-name">Investment in Future</span><span class="metric-impact impact-medium">Medium</span><span class="metric-desc">R&D spending and new outlets as a share of revenue. Are you building for tomorrow?</span></div>
-        <div class="metric-row"><span class="metric-name">Creation of Wealth</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Return on the parent company's total investment. Are you creating shareholder value?</span></div>
-      </div>
-      <p>Your <strong>Total Business Performance</strong> is the product of all five scores. A weakness in any single area has a multiplied negative effect on your overall result. Balance is everything.</p>
-    </div>
-
-    <div class="content-card">
-      <h2>🎯 Key Decisions Each Quarter</h2>
-      <p>Every quarter you make interconnected decisions across the full marketing mix:</p>
-      <div class="decision-grid">
-        <div class="decision-item"><span class="decision-icon">🚲</span><div><div class="decision-label">Brand Design</div><div class="decision-desc">Select components and features for each bike model. Match product attributes to customer needs.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">💰</span><div><div class="decision-label">Pricing Strategy</div><div class="decision-desc">Set prices per brand and region. Balance margins against competitive pressure.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">📢</span><div><div class="decision-label">Advertising</div><div class="decision-desc">Design ad copy, choose messaging themes, allocate media budgets across channels.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">🏪</span><div><div class="decision-label">Distribution</div><div class="decision-desc">Open and manage sales outlets. Decide where to establish presence.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">👥</span><div><div class="decision-label">Sales Force</div><div class="decision-desc">Hire, compensate, and deploy salespeople. Match staffing to demand potential.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">🔬</span><div><div class="decision-label">R&D Investment</div><div class="decision-desc">Fund research into new component technologies for future brand designs.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">🌐</span><div><div class="decision-label">Internet Marketing</div><div class="decision-desc">Manage web pages, SEO, paid search, and social media for each brand.</div></div></div>
-        <div class="decision-item"><span class="decision-icon">📊</span><div><div class="decision-label">Financial Planning</div><div class="decision-desc">Monitor cash flow, manage the balance sheet, fund growth without emergency loans.</div></div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB 2: Scenario Objectives -->
-  <div class="tab-panel" id="panel-scenario">
-    <div class="content-card">
-      <h2>🎯 Scenario: <span class="highlight" id="objectiveScenarioName">Loading...</span></h2>
-      <p id="scenarioDescription">Loading scenario details...</p>
-
-      <div class="detail-grid" id="scenarioDetails">
-        <div class="detail-box"><div class="value" id="detailCash">$5M</div><div class="label">Starting Cash</div></div>
-        <div class="detail-box"><div class="value" id="detailTeams">6</div><div class="label">Max Teams</div></div>
-        <div class="detail-box"><div class="value" id="detailBrands">5</div><div class="label">Max Brands</div></div>
-      </div>
-
-      <h3>🌍 Available Regions</h3>
-      <div id="regionsList" class="segment-grid"></div>
-
-      <h3>👤 Customer Segments</h3>
-      <p>These are the customer segments available in this scenario. Each has distinct needs, price sensitivity, and purchase motivations:</p>
-      <div id="segmentsList" class="segment-grid"></div>
-    </div>
-
-    <div class="content-card">
-      <h2>🔄 The Game Rhythm</h2>
-      <p>The simulation runs for <strong>8 quarters</strong> representing 2 years. Each quarter follows a natural cycle:</p>
-      <div class="decision-grid" style="grid-template-columns:1fr">
-        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">1️⃣</span><div><div class="decision-label">Review Results</div><div class="decision-desc">Study financials, market share, customer feedback, and competitor moves from the previous quarter.</div></div></div>
-        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">2️⃣</span><div><div class="decision-label">Analyze the Market</div><div class="decision-desc">Use research reports to understand customer needs, competitor strategies, and emerging opportunities.</div></div></div>
-        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">3️⃣</span><div><div class="decision-label">Make Decisions</div><div class="decision-desc">Adjust brands, pricing, ads, distribution, and investments based on your analysis.</div></div></div>
-        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">4️⃣</span><div><div class="decision-label">Submit & Compete</div><div class="decision-desc">Your decisions go head-to-head against every other team in the simulation engine.</div></div></div>
-      </div>
-      <p style="margin-top:16px">Early quarters focus on getting established. Mid-game shifts to optimization and competitive response. Final quarters are about execution, profitability, and positioning for the future.</p>
-    </div>
-  </div>
-
-  <!-- TAB 3: Strategy Guide -->
-  <div class="tab-panel" id="panel-guide">
-    <div class="content-card">
-      <h2>💡 How the Market Works</h2>
-      <h3>You Are a Market Maker</h3>
-      <p>This is not a simulation where demand magically appears. At the start, <strong>demand is zero</strong>. You must create it. Every sale results from having the right brand, at the right price, with compelling advertising, in a location customers can find you, with salespeople to close the deal.</p>
-      <p>If no teams target a segment, demand stays dormant. If several teams compete aggressively for the same segment, total demand can exceed the reported market potential. Your collective marketing efforts shape the entire market.</p>
-
-      <h3>Customer Segments</h3>
-      <p>The carbon fiber bike market is divided into five customer segments. Each values different things:</p>
-      <div class="segment-grid">
-        <div class="segment-row"><div class="segment-dot" style="background:#3b82f6"></div><div><div class="segment-name">Worker</div><div class="segment-profile">Daily commuters</div><div class="segment-values">Reliability, comfort, durability, ease of use. Practical over flashy.</div></div></div>
-        <div class="segment-row"><div class="segment-dot" style="background:#10b981"></div><div><div class="segment-name">Recreation</div><div class="segment-profile">Weekend riders, fitness enthusiasts</div><div class="segment-values">Fun, good looks, reasonable price. A bike they enjoy riding.</div></div></div>
-        <div class="segment-row"><div class="segment-dot" style="background:#f59e0b"></div><div><div class="segment-name">Mountain</div><div class="segment-profile">Trail and off-road riders</div><div class="segment-values">Ruggedness, suspension, technical performance on rough terrain.</div></div></div>
-        <div class="segment-row"><div class="segment-dot" style="background:#ef4444"></div><div><div class="segment-name">Speed</div><div class="segment-profile">Road cyclists, racers</div><div class="segment-values">Light weight, aerodynamics, top-tier components. Performance is everything.</div></div></div>
-        <div class="segment-row"><div class="segment-dot" style="background:#8b5cf6"></div><div><div class="segment-name">Youth</div><div class="segment-profile">Younger riders, students</div><div class="segment-values">Price-conscious but drawn to style, innovation, and brand coolness.</div></div></div>
-      </div>
-    </div>
-
-    <div class="content-card">
-      <h2>🏆 Tips for Success</h2>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Think benefits, not features.</strong> Customers buy what a bike does for them, not its spec sheet. A mountain biker wants confidence on rough trails. A commuter wants comfort on the ride home.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Price with purpose.</strong> Don't just undercut the competition. Understand what each segment is willing to pay and where your brand sits on the value curve.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Advertising must be truthful.</strong> Your ads are evaluated for accuracy. False claims can trigger lawsuits from competitors. Advertise benefits your brand actually delivers.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Watch your cash.</strong> Growth costs money. Opening outlets, investing in R&D, and hiring salespeople all consume cash before they generate returns.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Study the competition.</strong> Every quarter you receive market research on competitors' brands, prices, and ads. Use it.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Invest in R&D early.</strong> Advanced components take time to develop. Teams that invest early unlock better brand options in later quarters.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Expand thoughtfully.</strong> Geographic expansion opens new revenue but stretches resources. It's better to dominate one region than be mediocre everywhere.</span></div>
-      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Iterate and adapt.</strong> No plan survives first contact with the market. The winning teams aren't the ones with the best original strategy — they're the ones who learn fastest.</span></div>
-    </div>
-  </div>
-
+  <div class="tab-panel active" id="panel-brief"></div>
+  <div class="tab-panel" id="panel-scenario"></div>
+  <div class="tab-panel" id="panel-guide"></div>
 </div>
-
-<!-- Fixed CTA Footer -->
 <div class="cta-footer">
   <button class="cta-secondary" onclick="window.location.href='/dashboard.html'">← Back</button>
-  <button class="cta-btn" id="startBtn" onclick="startCampaign()">
-    🚀 Start Campaign
-  </button>
+  <button class="cta-btn" id="startBtn" onclick="startCampaign()">🚀 Start Campaign</button>
 </div>
 
 <script>
-const API = window.location.origin;
-const params = new URLSearchParams(window.location.search);
-const scenarioId = params.get('scenario');
+const API=window.location.origin;
+const scenarioId=new URLSearchParams(window.location.search).get('scenario');
 
-// Scenario-specific content
-const SCENARIO_CONTENT = {
-  'local-launch': {
-    description: 'Start small and prove the concept. Launch your carbon fiber bike brand in Latin America, targeting daily commuters and weekend recreational riders. With $6M in starting cash and only two customer segments to master, this is the ideal scenario to learn the fundamentals of brand design, pricing, advertising, and distribution.',
-    regions: [{ name: 'Latin America (LATAM)', icon: '🌎', desc: 'Growing market with price-sensitive but aspirational consumers. Strong commuter culture in major cities.' }],
-    segments: ['Worker', 'Recreation'],
-    cash: '$6M', teams: '4', brands: '3'
-  },
-  'mountain-expedition': {
-    description: 'Take on three demanding segments in the competitive European market. Mountain bikers demand rugged performance, recreation riders want versatility, and speed enthusiasts chase pure performance. Sharper segmentation and nuanced brand positioning are essential to succeed.',
-    regions: [{ name: 'Europe', icon: '🏔️', desc: 'Mature cycling market with sophisticated buyers. Strong outdoor culture and willingness to pay for quality.' }],
-    segments: ['Mountain', 'Recreation', 'Speed'],
-    cash: '$5M', teams: '6', brands: '4'
-  },
-  'global-domination': {
-    description: 'The full challenge. Manage brands across three global regions serving five distinct customer segments. Every decision ripples across markets — pricing in Latin America affects your ability to fund R&D for European mountain bikers. Maximum complexity, maximum reward.',
-    regions: [
-      { name: 'Latin America (LATAM)', icon: '🌎', desc: 'Growing market with price-sensitive consumers.' },
-      { name: 'Europe', icon: '🏔️', desc: 'Mature cycling market with premium buyers.' },
-      { name: 'Asia-Pacific (APAC)', icon: '🌏', desc: 'Fast-growing, tech-savvy consumer base.' }
-    ],
-    segments: ['Worker', 'Recreation', 'Youth', 'Mountain', 'Speed'],
-    cash: '$5M', teams: '6', brands: '5'
-  },
-  'speed-innovation': {
-    description: 'A focused, high-intensity scenario in the fast-moving Asia-Pacific market. Two tech-savvy segments — speed enthusiasts and youth riders — demand innovation, performance, and cutting-edge design. Heavy R&D investment and bold marketing are the keys to winning.',
-    regions: [{ name: 'Asia-Pacific (APAC)', icon: '🌏', desc: 'Fast-growing market driven by technology adoption and a young, active population.' }],
-    segments: ['Speed', 'Youth'],
-    cash: '$4.5M', teams: '4', brands: '4'
-  }
+// ============================================================
+// SCENARIO DATA — Each is a completely different product world
+// ============================================================
+const SCENARIOS={
+
+// ─────────────── SMARTPHONES (Beginner) ───────────────
+'local-launch':{
+  icon:'📱', title:'Phone First', tagline:'Launch a smartphone brand in emerging markets',
+  difficulty:'Beginner', diffColor:'#10b981',
+  product:'Smartphones', company:'NovaTech Industries',
+  brief:`
+    <div class="card">
+      <h2>Campaign Brief: <span class="hl">Phone First</span></h2>
+      <p>You have just been appointed to lead the mobile division of <strong>NovaTech Industries</strong>, a major technology conglomerate. Your parent company has developed two breakthrough innovations: a modular micro-assembly process that cuts smartphone production costs by 40%, and an AI-powered quality control system that eliminates defects.</p>
+      <p>The result: you can build premium-quality smartphones at mid-range prices. No more choosing between quality and affordability — your devices deliver both.</p>
+      <blockquote><p>"Will consumers in emerging markets pay a premium for a locally-tailored, high-quality smartphone over cheap imports?"</p></blockquote>
+      <p>Nobody knows yet. That is your challenge. Over <strong>8 quarters</strong> of simulated business, you will launch brands, build distribution, and prove this concept can generate real returns for NovaTech.</p>
+      <h3>📊 Your Balanced Scorecard</h3>
+      <p>Performance is measured across five dimensions. Excellence in one area cannot compensate for weakness in another — the scorecard is multiplicative:</p>
+      <div class="metric-grid">
+        <div class="metric-row header"><span>Metric</span><span>Impact</span><span>What It Measures</span></div>
+        <div class="metric-row"><span class="metric-name">Financial Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Operating profit vs. revenue. Can you run a profitable phone business?</span></div>
+        <div class="metric-row"><span class="metric-name">Market Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Market share in your target segments. Are you winning customers?</span></div>
+        <div class="metric-row"><span class="metric-name">Marketing Effectiveness</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">Customer satisfaction with your brands and campaigns.</span></div>
+        <div class="metric-row"><span class="metric-name">Investment in Future</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">R&D spending and new distribution as % of revenue.</span></div>
+        <div class="metric-row"><span class="metric-name">Creation of Wealth</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Return on NovaTech's total investment. Are you creating shareholder value?</span></div>
+      </div>
+      <p>Your <strong>Total Business Performance</strong> is the product of all five scores. A zero in any dimension devastates your overall result.</p>
+    </div>
+    <div class="card">
+      <h2>🎯 Key Decisions Each Quarter</h2>
+      <p>Every quarter you make interconnected decisions across the marketing mix:</p>
+      <div class="dgrid">
+        <div class="ditem"><span class="icon">📱</span><div><div class="label">Product Design</div><div class="desc">Configure display, processor, camera, battery and other components for each phone model.</div></div></div>
+        <div class="ditem"><span class="icon">💰</span><div><div class="label">Pricing Strategy</div><div class="desc">Set retail prices per model and region. Balance margins vs. market penetration.</div></div></div>
+        <div class="ditem"><span class="icon">📢</span><div><div class="label">Advertising</div><div class="desc">Craft campaigns, choose media channels, allocate budgets across markets.</div></div></div>
+        <div class="ditem"><span class="icon">🏪</span><div><div class="label">Distribution</div><div class="desc">Open retail locations and carrier partnerships. Be where customers shop.</div></div></div>
+        <div class="ditem"><span class="icon">👥</span><div><div class="label">Sales Force</div><div class="desc">Hire, train, and deploy sales reps. Match staffing to demand.</div></div></div>
+        <div class="ditem"><span class="icon">🔬</span><div><div class="label">R&D Investment</div><div class="desc">Fund next-gen chip designs, camera modules, and software features.</div></div></div>
+        <div class="ditem"><span class="icon">🌐</span><div><div class="label">Digital Marketing</div><div class="desc">Manage SEO, social media, influencer partnerships, and online presence.</div></div></div>
+        <div class="ditem"><span class="icon">📊</span><div><div class="label">Financial Planning</div><div class="desc">Monitor cash flow, manage growth spending, avoid emergency loans.</div></div></div>
+      </div>
+    </div>`,
+
+  scenario:`
+    <div class="card">
+      <h2>🎯 Scenario: <span class="hl">Phone First</span></h2>
+      <p>A focused, beginner-friendly scenario. Launch your smartphone brand in <strong>Latin America</strong>, targeting two clear customer segments. With generous starting capital and a limited product scope, this is the perfect place to learn the fundamentals of strategic marketing.</p>
+      <div class="detail-grid">
+        <div class="detail-box"><div class="value">$6M</div><div class="label">Starting Cash</div></div>
+        <div class="detail-box"><div class="value">4</div><div class="label">Competing Teams</div></div>
+        <div class="detail-box"><div class="value">3</div><div class="label">Max Brands</div></div>
+      </div>
+      <h3>🌍 Market: Latin America</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:var(--primary)"></div><div><div class="seg-name">🌎 Latin America (LATAM)</div><div class="seg-values">Rapidly growing smartphone adoption. Price-sensitive but aspirational consumers. Strong social media culture in major cities like São Paulo, Mexico City, and Buenos Aires.</div></div></div>
+      </div>
+      <h3>👤 Customer Segments</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:#3b82f6"></div><div><div class="seg-name">Budget Buyers</div><div class="seg-profile">First-time smartphone owners, value-conscious families</div><div class="seg-values">Prioritize <strong>battery life, durability, and price</strong>. They need a reliable phone that lasts all day and survives daily life. Fancy features matter less than rock-solid basics.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#10b981"></div><div><div class="seg-name">Social Connectors</div><div class="seg-profile">Young professionals, social media enthusiasts</div><div class="seg-values">Want a <strong>great camera, smooth software, and stylish design</strong>. Their phone is how they express themselves — Instagram stories, TikTok videos, WhatsApp groups. Willing to pay more for the right experience.</div></div></div>
+      </div>
+      <h3>🔧 Product Components</h3>
+      <p>Each smartphone you design is built from 8 components. Higher quality = better customer satisfaction but higher unit cost:</p>
+      <div class="comp-grid">
+        <div class="comp-item"><div class="comp-num">1</div><div><div class="comp-name">Display</div><div class="comp-desc">Screen size, resolution, brightness</div></div></div>
+        <div class="comp-item"><div class="comp-num">2</div><div><div class="comp-name">Processor</div><div class="comp-desc">Speed, efficiency, multitasking</div></div></div>
+        <div class="comp-item"><div class="comp-num">3</div><div><div class="comp-name">Camera System</div><div class="comp-desc">Photo quality, video, low-light</div></div></div>
+        <div class="comp-item"><div class="comp-num">4</div><div><div class="comp-name">Battery</div><div class="comp-desc">Capacity, fast charging, longevity</div></div></div>
+        <div class="comp-item"><div class="comp-num">5</div><div><div class="comp-name">Storage</div><div class="comp-desc">Internal memory, expandable</div></div></div>
+        <div class="comp-item"><div class="comp-num">6</div><div><div class="comp-name">Build Quality</div><div class="comp-desc">Materials, water resistance, feel</div></div></div>
+        <div class="comp-item"><div class="comp-num">7</div><div><div class="comp-name">Software</div><div class="comp-desc">OS polish, updates, app ecosystem</div></div></div>
+        <div class="comp-item"><div class="comp-num">8</div><div><div class="comp-name">Connectivity</div><div class="comp-desc">5G, WiFi, Bluetooth, NFC</div></div></div>
+      </div>
+    </div>`,
+
+  guide:`
+    <div class="card">
+      <h2>💡 How the Market Works</h2>
+      <h3>You Create Demand</h3>
+      <p>At the start, <strong>demand is zero</strong>. No one knows your brand exists. Every sale results from the right product, at the right price, with compelling advertising, in locations customers can find, with sales reps to close the deal.</p>
+      <p>If no teams target a segment, demand stays dormant. If several compete aggressively, total demand can exceed reported market potential. Your collective marketing efforts shape the entire market.</p>
+      <h3>Beginner Tips: Phone First</h3>
+      <p>This is your first scenario, so focus on mastering fundamentals:</p>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Start with one strong brand.</strong> Don't spread too thin. Design one phone that nails the needs of one segment, then expand.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Budget Buyers want value.</strong> Great battery, solid build, decent screen. Don't overspend on camera or cutting-edge features — they care about reliability.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Social Connectors want cameras.</strong> This segment will pay a premium for Instagram-worthy photos and smooth social media performance.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Watch your cash.</strong> Opening stores and hiring sales reps costs money before generating returns. Don't expand distribution faster than demand warrants.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Price with purpose.</strong> Understand what each segment can afford. Undercutting competitors erodes margins; overpricing kills volume.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Invest in R&D early.</strong> Better components take time. Teams that invest early unlock competitive advantages in later quarters.</span></div>
+    </div>
+    <div class="card">
+      <h2>🔄 The Quarter Cycle</h2>
+      <div class="step-flow">
+        <div class="step-item"><div class="step-num">1</div><div><div class="step-label">Review Results</div><div class="step-desc">Study your financials, market share, and customer feedback from last quarter.</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div class="step-label">Analyze the Market</div><div class="step-desc">Read research reports on segment demand, competitor pricing, and brand perceptions.</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div class="step-label">Make Decisions</div><div class="step-desc">Adjust product specs, pricing, advertising, distribution, and R&D investments.</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div><div class="step-label">Submit & Compete</div><div class="step-desc">Your decisions go head-to-head against every other team in the simulation engine.</div></div></div>
+      </div>
+    </div>`
+},
+
+// ─────────────── SMART WEARABLES (Intermediate) ───────────────
+'mountain-expedition':{
+  icon:'⌚', title:'Wearable Edge', tagline:'Smart wearables for the European health & fitness market',
+  difficulty:'Intermediate', diffColor:'#f59e0b',
+  product:'Smart Wearables', company:'WellTech Corp',
+  brief:`
+    <div class="card">
+      <h2>Campaign Brief: <span class="hl">Wearable Edge</span></h2>
+      <p>You have been brought in to lead the consumer wearables division of <strong>WellTech Corp</strong>, a health technology company. WellTech has developed two proprietary technologies: an ultra-precise biosensor array that tracks health metrics with medical-grade accuracy, and a flexible micro-battery that delivers 5x the power density of current wearables.</p>
+      <p>This means wearable devices that can monitor heart rhythm, blood oxygen, sleep patterns, and workout intensity — all lasting a full week on a single charge. Gone are the chunky fitness bands with 2-day battery life and unreliable readings.</p>
+      <blockquote><p>"Will European consumers trust a new brand to sit on their wrist and monitor their health 24/7?"</p></blockquote>
+      <p>Trust, style, and accuracy must all converge. Over <strong>8 quarters</strong>, you will build WellTech's wearables brand from scratch in the demanding European market — where consumers are sophisticated, privacy-conscious, and have high expectations.</p>
+      <h3>📊 Your Balanced Scorecard</h3>
+      <p>Performance is measured across five dimensions. The scorecard is multiplicative — a weakness in any area has a compounding negative effect:</p>
+      <div class="metric-grid">
+        <div class="metric-row header"><span>Metric</span><span>Impact</span><span>What It Measures</span></div>
+        <div class="metric-row"><span class="metric-name">Financial Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Operating profit vs. revenue. Are your wearables profitable?</span></div>
+        <div class="metric-row"><span class="metric-name">Market Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Market share in target segments. Are athletes and health users choosing you?</span></div>
+        <div class="metric-row"><span class="metric-name">Marketing Effectiveness</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">Customer satisfaction with product quality and brand messaging.</span></div>
+        <div class="metric-row"><span class="metric-name">Investment in Future</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">R&D and distribution investment relative to revenue.</span></div>
+        <div class="metric-row"><span class="metric-name">Creation of Wealth</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Total return on WellTech's investment in your division.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎯 Key Decisions Each Quarter</h2>
+      <div class="dgrid">
+        <div class="ditem"><span class="icon">⌚</span><div><div class="label">Product Design</div><div class="desc">Configure sensors, display, battery, comfort, and style for each wearable model.</div></div></div>
+        <div class="ditem"><span class="icon">💰</span><div><div class="label">Pricing</div><div class="desc">Position each model on the value spectrum — from fitness-focused to luxury health.</div></div></div>
+        <div class="ditem"><span class="icon">📢</span><div><div class="label">Advertising</div><div class="desc">Build trust through health messaging, athlete endorsements, and lifestyle campaigns.</div></div></div>
+        <div class="ditem"><span class="icon">🏪</span><div><div class="label">Distribution</div><div class="desc">Partner with sporting goods stores, electronics retailers, and health clinics.</div></div></div>
+        <div class="ditem"><span class="icon">👥</span><div><div class="label">Sales Force</div><div class="desc">Deploy product specialists who understand health tech and can demo features.</div></div></div>
+        <div class="ditem"><span class="icon">🔬</span><div><div class="label">R&D</div><div class="desc">Develop next-gen sensors, new health metrics, and improved battery tech.</div></div></div>
+        <div class="ditem"><span class="icon">🌐</span><div><div class="label">Digital Marketing</div><div class="desc">Health blogs, fitness influencer partnerships, app store optimization.</div></div></div>
+        <div class="ditem"><span class="icon">📊</span><div><div class="label">Financial Planning</div><div class="desc">Balance R&D-heavy spending against the need for near-term profitability.</div></div></div>
+      </div>
+    </div>`,
+
+  scenario:`
+    <div class="card">
+      <h2>🎯 Scenario: <span class="hl">Wearable Edge</span></h2>
+      <p>An intermediate scenario with three distinct customer segments in the <strong>European</strong> market. You'll need sharper segmentation and nuanced brand positioning to succeed. Each segment has different expectations for what a wearable should be.</p>
+      <div class="detail-grid">
+        <div class="detail-box"><div class="value">$5M</div><div class="label">Starting Cash</div></div>
+        <div class="detail-box"><div class="value">6</div><div class="label">Competing Teams</div></div>
+        <div class="detail-box"><div class="value">4</div><div class="label">Max Brands</div></div>
+      </div>
+      <h3>🌍 Market: Europe</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:var(--primary)"></div><div><div class="seg-name">🏔️ Europe</div><div class="seg-values">Mature tech market with sophisticated, privacy-conscious buyers. Strong outdoor culture, health awareness, and willingness to invest in wellness. Key markets: Germany, UK, France, Nordics.</div></div></div>
+      </div>
+      <h3>👤 Customer Segments</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:#f59e0b"></div><div><div class="seg-name">Athletes</div><div class="seg-profile">Runners, cyclists, triathletes, gym enthusiasts</div><div class="seg-values">Demand <strong>sensor accuracy, durability, and performance tracking</strong>. They need precise heart rate zones, GPS tracking, and workout analytics. Comfort during intense activity is essential.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#10b981"></div><div><div class="seg-name">Health-Conscious</div><div class="seg-profile">Wellness-focused adults, health monitoring</div><div class="seg-values">Want <strong>sleep tracking, stress monitoring, and all-day comfort</strong>. They wear it 24/7 and care about battery life, gentle notifications, and integration with health apps. Style matters — it's always visible.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#ef4444"></div><div><div class="seg-name">Tech Enthusiasts</div><div class="seg-profile">Early adopters, gadget lovers</div><div class="seg-values">Chase <strong>cutting-edge features, best display, and newest connectivity</strong>. They want the latest sensors, NFC payments, LTE connectivity. Willing to pay premium for innovation.</div></div></div>
+      </div>
+      <h3>🔧 Product Components</h3>
+      <div class="comp-grid">
+        <div class="comp-item"><div class="comp-num">1</div><div><div class="comp-name">Sensors</div><div class="comp-desc">Heart rate, SpO2, temperature accuracy</div></div></div>
+        <div class="comp-item"><div class="comp-num">2</div><div><div class="comp-name">Display</div><div class="comp-desc">AMOLED, brightness, always-on</div></div></div>
+        <div class="comp-item"><div class="comp-num">3</div><div><div class="comp-name">Battery Life</div><div class="comp-desc">Days per charge, charging speed</div></div></div>
+        <div class="comp-item"><div class="comp-num">4</div><div><div class="comp-name">Build Quality</div><div class="comp-desc">Water resistance, durability, materials</div></div></div>
+        <div class="comp-item"><div class="comp-num">5</div><div><div class="comp-name">Software</div><div class="comp-desc">Health algorithms, app ecosystem</div></div></div>
+        <div class="comp-item"><div class="comp-num">6</div><div><div class="comp-name">Comfort & Fit</div><div class="comp-desc">Band design, weight, wearability</div></div></div>
+        <div class="comp-item"><div class="comp-num">7</div><div><div class="comp-name">Style & Design</div><div class="comp-desc">Aesthetics, customizable faces/bands</div></div></div>
+        <div class="comp-item"><div class="comp-num">8</div><div><div class="comp-name">Connectivity</div><div class="comp-desc">Bluetooth, WiFi, NFC, LTE</div></div></div>
+      </div>
+    </div>`,
+
+  guide:`
+    <div class="card">
+      <h2>💡 Strategic Considerations</h2>
+      <h3>Three Segments, Three Worlds</h3>
+      <p>The intermediate challenge is <strong>serving distinct needs without diluting your brand</strong>. An athlete's ideal wearable is different from a health-conscious buyer's. One brand cannot optimally serve both — you'll likely need 2-3 specialized models.</p>
+      <p>Athletes buy seasonally (pre-marathon, pre-cycling season). Health-Conscious buyers are steady year-round. Tech Enthusiasts spike around product launches. Plan inventory accordingly.</p>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Sensors are king for Athletes.</strong> They'll tolerate a smaller display and less style for superior accuracy and GPS performance.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Health-Conscious buyers live in their wearable.</strong> Comfort and battery life trump everything. If it's uncomfortable to sleep in, they'll stop wearing it.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Tech Enthusiasts want the wow factor.</strong> Best display, latest connectivity, newest features. They're your most price-insensitive segment.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>R&D compounds over time.</strong> Sensor accuracy improvements in Q2 make your Q4 products dramatically better. Invest early.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Europe demands trust.</strong> Health claims must be accurate. Advertising must be truthful. False claims trigger backlash in this market.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Distribution matters differently.</strong> Athletes buy at sport shops. Health buyers browse pharmacies and wellness stores. Tech enthusiasts want electronics retailers.</span></div>
+    </div>
+    <div class="card">
+      <h2>🔄 The Quarter Cycle</h2>
+      <div class="step-flow">
+        <div class="step-item"><div class="step-num">1</div><div><div class="step-label">Review Results</div><div class="step-desc">Analyze sales by segment, customer satisfaction scores, and competitor moves.</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div class="step-label">Analyze the Market</div><div class="step-desc">Study segment demand shifts, competitor product specs, and pricing trends.</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div class="step-label">Make Decisions</div><div class="step-desc">Refine product designs, adjust pricing, reallocate marketing budgets.</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div><div class="step-label">Submit & Compete</div><div class="step-desc">Decisions are processed against all competitors simultaneously.</div></div></div>
+      </div>
+    </div>`
+},
+
+// ─────────────── LAPTOPS (Advanced) ───────────────
+'global-domination':{
+  icon:'💻', title:'Laptop Empire', tagline:'Build a global laptop brand across 3 continents',
+  difficulty:'Advanced', diffColor:'#ef4444',
+  product:'Laptops', company:'TitanPC',
+  brief:`
+    <div class="card">
+      <h2>Campaign Brief: <span class="hl">Laptop Empire</span></h2>
+      <p><strong>TitanPC</strong>, a major hardware manufacturer, is giving you the keys to their new laptop division. The company has developed a revolutionary thermal management system and a modular chassis platform that lets you build everything from ultra-light student notebooks to powerhouse creative workstations — all on the same production line.</p>
+      <p>This manufacturing flexibility is your secret weapon. While competitors build one laptop for everyone, you can tailor machines to specific audiences without the cost penalty of running separate factories.</p>
+      <blockquote><p>"Can a new laptop brand break through in a market dominated by established giants — by simply understanding customers better than anyone else?"</p></blockquote>
+      <p>This is the full challenge. <strong>Three regions, five customer segments, 8 quarters.</strong> Every decision in Latin America ripples through Europe and Asia-Pacific. Pricing strategy in one market affects your R&D budget for another. This is strategic marketing at maximum complexity.</p>
+      <h3>📊 Your Balanced Scorecard</h3>
+      <div class="metric-grid">
+        <div class="metric-row header"><span>Metric</span><span>Impact</span><span>What It Measures</span></div>
+        <div class="metric-row"><span class="metric-name">Financial Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Operating profit margins across your global laptop business.</span></div>
+        <div class="metric-row"><span class="metric-name">Market Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Market share across all regions and segments you compete in.</span></div>
+        <div class="metric-row"><span class="metric-name">Marketing Effectiveness</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">Brand perception, ad effectiveness, and customer satisfaction.</span></div>
+        <div class="metric-row"><span class="metric-name">Investment in Future</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">R&D and distribution expansion relative to current revenue.</span></div>
+        <div class="metric-row"><span class="metric-name">Creation of Wealth</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Total return on TitanPC's investment in your division.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎯 Key Decisions Each Quarter</h2>
+      <div class="dgrid">
+        <div class="ditem"><span class="icon">💻</span><div><div class="label">Product Design</div><div class="desc">Spec out display, processor, graphics, battery, storage, keyboard, and build quality per model.</div></div></div>
+        <div class="ditem"><span class="icon">💰</span><div><div class="label">Regional Pricing</div><div class="desc">Set prices per model, per region. Account for local purchasing power and competition.</div></div></div>
+        <div class="ditem"><span class="icon">📢</span><div><div class="label">Advertising</div><div class="desc">Run campaigns tailored to each region's media landscape and culture.</div></div></div>
+        <div class="ditem"><span class="icon">🏪</span><div><div class="label">Distribution</div><div class="desc">Build retail presence across 3 continents. Each region has different channel preferences.</div></div></div>
+        <div class="ditem"><span class="icon">👥</span><div><div class="label">Sales Force</div><div class="desc">Hire and manage regional sales teams with different compensation norms.</div></div></div>
+        <div class="ditem"><span class="icon">🔬</span><div><div class="label">R&D</div><div class="desc">Invest in next-gen processors, displays, and thermal systems for future models.</div></div></div>
+        <div class="ditem"><span class="icon">🌐</span><div><div class="label">Digital Marketing</div><div class="desc">E-commerce strategy, tech review outreach, online campaigns by region.</div></div></div>
+        <div class="ditem"><span class="icon">📊</span><div><div class="label">Global Finance</div><div class="desc">Manage cash across regions, fund expansion, balance growth vs. profitability.</div></div></div>
+      </div>
+    </div>`,
+
+  scenario:`
+    <div class="card">
+      <h2>🎯 Scenario: <span class="hl">Laptop Empire</span></h2>
+      <p>The ultimate challenge. Manage a laptop brand across <strong>3 global regions</strong> serving <strong>5 distinct segments</strong>. Every decision ripples — pricing in LATAM affects your ability to fund R&D for European creative pros. Maximum complexity, maximum reward.</p>
+      <div class="detail-grid">
+        <div class="detail-box"><div class="value">$5M</div><div class="label">Starting Cash</div></div>
+        <div class="detail-box"><div class="value">6</div><div class="label">Competing Teams</div></div>
+        <div class="detail-box"><div class="value">5</div><div class="label">Max Brands</div></div>
+      </div>
+      <h3>🌍 Markets</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:#3b82f6"></div><div><div class="seg-name">🌎 Latin America</div><div class="seg-values">Price-sensitive market focused on value. Strong student population. Growing remote work culture.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#10b981"></div><div><div class="seg-name">🏔️ Europe</div><div class="seg-values">Mature market. Strong creative and business segments. Buyers value build quality and sustainability.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#f59e0b"></div><div><div class="seg-name">🌏 Asia-Pacific</div><div class="seg-values">Fast-growing, tech-savvy. Large gaming segment. Competitive pricing pressure.</div></div></div>
+      </div>
+      <h3>👤 Customer Segments</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:#3b82f6"></div><div><div class="seg-name">Business Pros</div><div class="seg-profile">Remote workers, executives, professionals</div><div class="seg-values"><strong>Keyboard, build quality, battery life.</strong> Reliability and portability for all-day work. They need it to just work, every time.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#10b981"></div><div><div class="seg-name">Students</div><div class="seg-profile">University students, budget learners</div><div class="seg-values"><strong>Price, battery, basic performance.</strong> Needs to handle docs, video calls, and light multitasking without breaking the bank.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#8b5cf6"></div><div><div class="seg-name">Casual Users</div><div class="seg-profile">Home use, browsing, streaming, light work</div><div class="seg-values"><strong>Display, storage, ease of use.</strong> A good-looking laptop for Netflix, photos, and everyday tasks. Style and screen quality matter.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#f59e0b"></div><div><div class="seg-name">Creative Pros</div><div class="seg-profile">Designers, video editors, photographers</div><div class="seg-values"><strong>Display accuracy, processor, graphics, storage.</strong> Color-critical workflows demand the best screens and raw computing power.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#ef4444"></div><div><div class="seg-name">Gamers</div><div class="seg-profile">PC gamers, esports enthusiasts</div><div class="seg-values"><strong>Graphics, processor, display refresh rate.</strong> Frame rates, cooling, and raw power. They'll accept heavier, thicker machines for performance.</div></div></div>
+      </div>
+      <h3>🔧 Product Components</h3>
+      <div class="comp-grid">
+        <div class="comp-item"><div class="comp-num">1</div><div><div class="comp-name">Display</div><div class="comp-desc">Resolution, color accuracy, refresh rate</div></div></div>
+        <div class="comp-item"><div class="comp-num">2</div><div><div class="comp-name">Processor</div><div class="comp-desc">CPU speed, cores, efficiency</div></div></div>
+        <div class="comp-item"><div class="comp-num">3</div><div><div class="comp-name">Graphics Card</div><div class="comp-desc">GPU power for gaming/creative work</div></div></div>
+        <div class="comp-item"><div class="comp-num">4</div><div><div class="comp-name">Battery</div><div class="comp-desc">Hours per charge, fast charging</div></div></div>
+        <div class="comp-item"><div class="comp-num">5</div><div><div class="comp-name">Storage</div><div class="comp-desc">SSD speed and capacity</div></div></div>
+        <div class="comp-item"><div class="comp-num">6</div><div><div class="comp-name">Keyboard</div><div class="comp-desc">Key travel, backlight, trackpad</div></div></div>
+        <div class="comp-item"><div class="comp-num">7</div><div><div class="comp-name">Build Quality</div><div class="comp-desc">Chassis material, weight, hinges</div></div></div>
+        <div class="comp-item"><div class="comp-num">8</div><div><div class="comp-name">Connectivity</div><div class="comp-desc">Ports, WiFi 6E, Thunderbolt</div></div></div>
+      </div>
+    </div>`,
+
+  guide:`
+    <div class="card">
+      <h2>💡 Advanced Strategy: Global Operations</h2>
+      <h3>The Complexity Trap</h3>
+      <p>With 5 segments across 3 regions, you could theoretically serve 15 market-segment combinations. <strong>Don't.</strong> The winning teams pick 2-3 segments to dominate, then expand deliberately. Trying to be everything to everyone is the fastest path to mediocrity.</p>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Start regional, go global.</strong> Launch in one region first. Prove your model works, then expand with confidence and cash flow.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Gamers and Creative Pros are high-margin.</strong> They'll pay $1,500+ for the right machine. But they also demand the best components.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Students are volume plays.</strong> Low margin, high volume. Win this segment with aggressive pricing and adequate specs.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Regional pricing must reflect local markets.</strong> A $1,200 laptop is mid-range in Europe but premium in LATAM.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Graphics Card is the dividing line.</strong> Gamers and Creative Pros need it. Everyone else doesn't. This is where targeted product design pays off.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Cash is tight at global scale.</strong> Three regions means 3x the distribution costs, 3x the sales force. Budget carefully.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Study competitors relentlessly.</strong> Market research reports reveal competitor specs and pricing. Use this to find gaps.</span></div>
+    </div>
+    <div class="card">
+      <h2>🔄 The Quarter Cycle</h2>
+      <div class="step-flow">
+        <div class="step-item"><div class="step-num">1</div><div><div class="step-label">Review Global Results</div><div class="step-desc">Compare performance across regions. Identify where you're winning and where you're losing.</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div class="step-label">Analyze Markets</div><div class="step-desc">Study demand by segment and region. Watch for competitive shifts and emerging opportunities.</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div class="step-label">Make Decisions</div><div class="step-desc">Allocate resources across regions, tune product designs, adjust marketing mix.</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div><div class="step-label">Submit & Compete</div><div class="step-desc">All teams' global strategies collide in the simulation engine.</div></div></div>
+      </div>
+    </div>`
+},
+
+// ─────────────── VR/GAMING (Advanced) ───────────────
+'speed-innovation':{
+  icon:'🥽', title:'VR Rush', tagline:'Next-gen gaming hardware for Asia-Pacific',
+  difficulty:'Advanced', diffColor:'#ef4444',
+  product:'VR/Gaming Headsets', company:'Nexus Gaming',
+  brief:`
+    <div class="card">
+      <h2>Campaign Brief: <span class="hl">VR Rush</span></h2>
+      <p><strong>Nexus Gaming</strong>, a major entertainment technology company, has developed breakthrough optics: a pancake lens system delivering 4K-per-eye resolution in a headset weighing under 300 grams. Combined with their proprietary inside-out tracking, they've eliminated the need for external sensors entirely.</p>
+      <p>The result: VR that's actually comfortable for hours-long gaming sessions, with visuals crisp enough to read small text. For the first time, VR hardware isn't the bottleneck — content is.</p>
+      <blockquote><p>"Can immersive gaming headsets become a mainstream consumer product in the world's fastest-growing gaming market?"</p></blockquote>
+      <p>Asia-Pacific is ground zero for gaming culture. The region has 1.5 billion gamers, massive esports ecosystems, and consumers who embrace new tech faster than anywhere on Earth. Over <strong>8 quarters</strong>, you will prove that VR belongs in every gamer's setup.</p>
+      <h3>📊 Your Balanced Scorecard</h3>
+      <div class="metric-grid">
+        <div class="metric-row header"><span>Metric</span><span>Impact</span><span>What It Measures</span></div>
+        <div class="metric-row"><span class="metric-name">Financial Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Profitability of your gaming hardware business.</span></div>
+        <div class="metric-row"><span class="metric-name">Market Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Market share among APAC gamers and tech enthusiasts.</span></div>
+        <div class="metric-row"><span class="metric-name">Marketing Effectiveness</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">Brand buzz, customer satisfaction, review scores.</span></div>
+        <div class="metric-row"><span class="metric-name">Investment in Future</span><span class="metric-impact impact-med">Medium</span><span class="metric-desc">R&D investment in next-gen optics, haptics, and tracking.</span></div>
+        <div class="metric-row"><span class="metric-name">Creation of Wealth</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Return on Nexus Gaming's investment in your VR division.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎯 Key Decisions Each Quarter</h2>
+      <div class="dgrid">
+        <div class="ditem"><span class="icon">🥽</span><div><div class="label">Product Design</div><div class="desc">Configure optics, processor, audio, tracking, comfort, and software for each headset model.</div></div></div>
+        <div class="ditem"><span class="icon">💰</span><div><div class="label">Pricing</div><div class="desc">Balance accessibility for casual gamers vs. premium positioning for enthusiasts.</div></div></div>
+        <div class="ditem"><span class="icon">📢</span><div><div class="label">Advertising</div><div class="desc">Esports sponsorships, streamer partnerships, gaming media campaigns.</div></div></div>
+        <div class="ditem"><span class="icon">🏪</span><div><div class="label">Distribution</div><div class="desc">Gaming cafes, electronics retailers, and direct-to-consumer online stores.</div></div></div>
+        <div class="ditem"><span class="icon">👥</span><div><div class="label">Sales Force</div><div class="desc">Product demo specialists at gaming events and retail locations.</div></div></div>
+        <div class="ditem"><span class="icon">🔬</span><div><div class="label">R&D</div><div class="desc">Next-gen displays, haptic feedback, eye tracking, wireless technology.</div></div></div>
+        <div class="ditem"><span class="icon">🌐</span><div><div class="label">Digital Marketing</div><div class="desc">Twitch/YouTube sponsorships, gaming forums, viral marketing campaigns.</div></div></div>
+        <div class="ditem"><span class="icon">📊</span><div><div class="label">Financial Planning</div><div class="desc">Heavy upfront R&D vs. aggressive market capture. Manage the cash burn carefully.</div></div></div>
+      </div>
+    </div>`,
+
+  scenario:`
+    <div class="card">
+      <h2>🎯 Scenario: <span class="hl">VR Rush</span></h2>
+      <p>A focused, high-intensity scenario in the <strong>Asia-Pacific</strong> market. Two passionate customer segments — hardcore gamers and casual players — with very different needs. Heavy R&D and bold marketing are the keys. Lower starting cash means every dollar counts.</p>
+      <div class="detail-grid">
+        <div class="detail-box"><div class="value">$4.5M</div><div class="label">Starting Cash</div></div>
+        <div class="detail-box"><div class="value">4</div><div class="label">Competing Teams</div></div>
+        <div class="detail-box"><div class="value">4</div><div class="label">Max Brands</div></div>
+      </div>
+      <h3>🌍 Market: Asia-Pacific</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:var(--primary)"></div><div><div class="seg-name">🌏 Asia-Pacific (APAC)</div><div class="seg-values">The world's largest gaming market. Massive esports culture in South Korea, Japan, and China. Tech-forward consumers who adopt new hardware aggressively. Price competition is fierce.</div></div></div>
+      </div>
+      <h3>👤 Customer Segments</h3>
+      <div class="segment-grid">
+        <div class="seg-row"><div class="seg-dot" style="background:#ef4444"></div><div><div class="seg-name">Hardcore Gamers</div><div class="seg-profile">Competitive players, esports enthusiasts, VR veterans</div><div class="seg-values">Demand <strong>best display, lowest latency, precise tracking, and powerful audio</strong>. Performance over everything. They'll pay premium for any competitive edge. Comfort matters for marathon sessions.</div></div></div>
+        <div class="seg-row"><div class="seg-dot" style="background:#8b5cf6"></div><div><div class="seg-name">Casual Gamers</div><div class="seg-profile">Social gamers, fitness VR users, VR newcomers</div><div class="seg-values">Want <strong>ease of setup, comfort, fun content, and affordable price</strong>. They play Beat Saber with friends, not competitive shooters. Simplicity and value win over raw specs.</div></div></div>
+      </div>
+      <h3>🔧 Product Components</h3>
+      <div class="comp-grid">
+        <div class="comp-item"><div class="comp-num">1</div><div><div class="comp-name">Display / Optics</div><div class="comp-desc">Resolution, lens quality, FOV</div></div></div>
+        <div class="comp-item"><div class="comp-num">2</div><div><div class="comp-name">Processor</div><div class="comp-desc">Chipset speed, rendering power</div></div></div>
+        <div class="comp-item"><div class="comp-num">3</div><div><div class="comp-name">Audio System</div><div class="comp-desc">Spatial audio, built-in speakers</div></div></div>
+        <div class="comp-item"><div class="comp-num">4</div><div><div class="comp-name">Motion Tracking</div><div class="comp-desc">Inside-out, hand tracking, precision</div></div></div>
+        <div class="comp-item"><div class="comp-num">5</div><div><div class="comp-name">Comfort</div><div class="comp-desc">Weight, face padding, airflow</div></div></div>
+        <div class="comp-item"><div class="comp-num">6</div><div><div class="comp-name">Build Quality</div><div class="comp-desc">Durability, adjustability, materials</div></div></div>
+        <div class="comp-item"><div class="comp-num">7</div><div><div class="comp-name">Software / Content</div><div class="comp-desc">Game library, OS, store ecosystem</div></div></div>
+        <div class="comp-item"><div class="comp-num">8</div><div><div class="comp-name">Connectivity</div><div class="comp-desc">WiFi 6E, PC Link, standalone mode</div></div></div>
+      </div>
+    </div>`,
+
+  guide:`
+    <div class="card">
+      <h2>💡 Strategic Considerations</h2>
+      <h3>The VR Dilemma</h3>
+      <p>VR gaming sits at the intersection of <strong>premium technology and mass-market ambition</strong>. The best headsets cost a fortune to build. Casual gamers won't pay $800. Hardcore gamers won't accept compromise. Your product portfolio must bridge this gap.</p>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Hardcore gamers are influencers.</strong> When a top streamer uses your headset, casual gamers notice. Win the enthusiasts first — the mainstream follows.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Casual gamers are the volume play.</strong> There are 10 casual gamers for every hardcore one. An affordable, comfortable headset with good content can outsell a premium model 5-to-1.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>R&D is critical and expensive.</strong> Optics, tracking, and comfort improvements require sustained investment. You're in a tech arms race with $4.5M to start — spend wisely.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>APAC is price-competitive.</strong> Consumers compare specs-per-dollar aggressively. You cannot charge European prices in this market.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Comfort separates winners from losers.</strong> A headset that's uncomfortable after 30 minutes gets returned. Invest in weight reduction and ventilation.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Gaming cafes are a distribution superpower.</strong> In APAC, gamers try hardware at cafes before buying. Getting your headsets into cafes is a massive awareness driver.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Lower starting cash means trade-offs.</strong> You can't do everything. Pick: R&D leadership, or distribution breadth, or marketing blitz. Not all three early on.</span></div>
+    </div>
+    <div class="card">
+      <h2>🔄 The Quarter Cycle</h2>
+      <div class="step-flow">
+        <div class="step-item"><div class="step-num">1</div><div><div class="step-label">Review Results</div><div class="step-desc">Analyze sales, market share, customer reviews, and financial health.</div></div></div>
+        <div class="step-item"><div class="step-num">2</div><div><div class="step-label">Scout the Competition</div><div class="step-desc">Study competitor specs, pricing, and marketing strategies from research reports.</div></div></div>
+        <div class="step-item"><div class="step-num">3</div><div><div class="step-label">Make Decisions</div><div class="step-desc">Refine products, adjust pricing, deploy marketing, allocate R&D budgets.</div></div></div>
+        <div class="step-item"><div class="step-num">4</div><div><div class="step-label">Submit & Compete</div><div class="step-desc">All teams compete simultaneously. The market decides who wins this quarter.</div></div></div>
+      </div>
+    </div>`
+}
 };
 
-const SEGMENT_DATA = {
-  Worker: { color: '#3b82f6', profile: 'Daily commuters', values: 'Reliability, comfort, durability, ease of use. Practical over flashy.' },
-  Recreation: { color: '#10b981', profile: 'Weekend riders, fitness enthusiasts', values: 'Fun, good looks, reasonable price. A bike they enjoy riding.' },
-  Mountain: { color: '#f59e0b', profile: 'Trail and off-road riders', values: 'Ruggedness, suspension, technical performance on rough terrain.' },
-  Speed: { color: '#ef4444', profile: 'Road cyclists, racers', values: 'Light weight, aerodynamics, top-tier components. Performance is everything.' },
-  Youth: { color: '#8b5cf6', profile: 'Younger riders, students', values: 'Price-conscious but drawn to style, innovation, and brand coolness.' }
-};
+// ============================================================
+// UI LOGIC
+// ============================================================
+const API_URL = window.location.origin;
 
-async function apiFetch(url, opts = {}) {
-  const token = localStorage.getItem('token');
-  const headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = 'Bearer ' + token;
-  try {
-    const res = await fetch(API + url, { ...opts, headers });
-    const text = await res.text();
-    try { return JSON.parse(text); } catch(e) { return { error: 'Server error' }; }
-  } catch(e) { return { error: 'Network error' }; }
+async function apiFetch(url, opts={}) {
+  const token=localStorage.getItem('token');
+  const headers={'Content-Type':'application/json'};
+  if(token)headers['Authorization']='Bearer '+token;
+  try{const res=await fetch(API_URL+url,{...opts,headers});const t=await res.text();try{return JSON.parse(t)}catch(e){return{error:'Server error'}}}catch(e){return{error:'Network error'}}
 }
 
-// Tabs
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
   });
 });
 
-async function init() {
-  if (!scenarioId || !SCENARIO_CONTENT[scenarioId]) {
-    window.location.href = '/dashboard.html';
-    return;
-  }
+async function init(){
+  if(!scenarioId||!SCENARIOS[scenarioId]){window.location.href='/dashboard.html';return}
+  const auth=await apiFetch('/api/auth/me');
+  if(!auth.user){window.location.href='/index.html';return}
 
-  // Check auth
-  const authData = await apiFetch('/api/auth/me');
-  if (!authData.user) { window.location.href = '/index.html'; return; }
+  const s=SCENARIOS[scenarioId];
+  document.getElementById('sIcon').textContent=s.icon;
+  document.getElementById('sTitle').textContent=s.title;
+  document.getElementById('sTagline').textContent=s.tagline;
+  document.getElementById('sDifficulty').textContent=s.difficulty;
+  document.getElementById('sDifficulty').style.background=s.diffColor+'18';
+  document.getElementById('sDifficulty').style.color=s.diffColor;
+  document.title=s.title+' — MarketSim Campaign Brief';
 
-  // Fetch scenario metadata
-  const data = await apiFetch('/api/game/quick-join');
-  const scenarios = data.scenarios || [];
-  const scenario = scenarios.find(s => s.id === scenarioId);
-  const content = SCENARIO_CONTENT[scenarioId];
+  document.getElementById('panel-brief').innerHTML=s.brief;
+  document.getElementById('panel-scenario').innerHTML=s.scenario;
+  document.getElementById('panel-guide').innerHTML=s.guide;
 
-  if (scenario) {
-    document.getElementById('scenarioIcon').textContent = scenario.icon;
-    document.getElementById('scenarioTitle').textContent = scenario.name;
-    document.getElementById('scenarioSubtitle').textContent = scenario.tagline;
-    document.getElementById('difficultyPill').textContent = scenario.difficulty;
-    document.getElementById('difficultyPill').style.background = scenario.difficultyColor + '18';
-    document.getElementById('difficultyPill').style.color = scenario.difficultyColor;
-    document.getElementById('briefScenarioName').textContent = scenario.name;
-    document.getElementById('objectiveScenarioName').textContent = scenario.name;
-    document.title = scenario.name + ' — MarketSim Campaign Brief';
-  }
-
-  // Populate scenario tab
-  document.getElementById('scenarioDescription').textContent = content.description;
-  document.getElementById('detailCash').textContent = content.cash;
-  document.getElementById('detailTeams').textContent = content.teams;
-  document.getElementById('detailBrands').textContent = content.brands;
-
-  // Regions
-  document.getElementById('regionsList').innerHTML = content.regions.map(r =>
-    '<div class="segment-row"><div class="segment-dot" style="background:var(--primary)"></div><div><div class="segment-name">' + r.icon + ' ' + r.name + '</div><div class="segment-values">' + r.desc + '</div></div></div>'
-  ).join('');
-
-  // Segments
-  document.getElementById('segmentsList').innerHTML = content.segments.map(name => {
-    const seg = SEGMENT_DATA[name];
-    return '<div class="segment-row"><div class="segment-dot" style="background:' + seg.color + '"></div><div><div class="segment-name">' + name + '</div><div class="segment-profile">' + seg.profile + '</div><div class="segment-values">' + seg.values + '</div></div></div>';
-  }).join('');
-
-  // Check if already in game for this scenario
-  const listData = await apiFetch('/api/game/list');
-  const games = listData.games || [];
-  const existingGame = games.find(g => g.market_scenario === scenarioId && (g.status === 'lobby' || g.status === 'active'));
-  if (existingGame) {
-    document.getElementById('startBtn').innerHTML = '▶ Continue Campaign';
-    document.getElementById('startBtn').dataset.gameId = existingGame.id;
+  // Check if already in a game for this scenario
+  const listData=await apiFetch('/api/game/list');
+  const games=listData.games||[];
+  const existing=games.find(g=>g.market_scenario===scenarioId&&(g.status==='lobby'||g.status==='active'));
+  if(existing){
+    document.getElementById('startBtn').innerHTML='▶ Continue Campaign';
+    document.getElementById('startBtn').dataset.gameId=existing.id;
   }
 }
 
-async function startCampaign() {
-  const btn = document.getElementById('startBtn');
-
-  // If already in a game, go directly
-  if (btn.dataset.gameId) {
-    window.location.href = '/simulation.html?game=' + btn.dataset.gameId;
-    return;
-  }
-
-  btn.innerHTML = '<span class="spinner"></span> Matching you with opponents...';
-  btn.disabled = true;
-
-  const data = await apiFetch('/api/game/quick-join', {
-    method: 'POST',
-    body: JSON.stringify({ scenarioId })
-  });
-
-  if (data.error) {
-    alert(data.error);
-    btn.innerHTML = '🚀 Start Campaign';
-    btn.disabled = false;
-    return;
-  }
-
-  btn.innerHTML = '✓ Joined as ' + (data.team?.name || 'your team') + '!';
-  btn.style.background = 'var(--green)';
-  setTimeout(() => {
-    window.location.href = '/simulation.html?game=' + data.game.id;
-  }, 1000);
+async function startCampaign(){
+  const btn=document.getElementById('startBtn');
+  if(btn.dataset.gameId){window.location.href='/simulation.html?game='+btn.dataset.gameId;return}
+  btn.innerHTML='<span class="spinner"></span> Matching you with opponents...';
+  btn.disabled=true;
+  const data=await apiFetch('/api/game/quick-join',{method:'POST',body:JSON.stringify({scenarioId})});
+  if(data.error){alert(data.error);btn.innerHTML='🚀 Start Campaign';btn.disabled=false;return}
+  btn.innerHTML='✓ Joined as '+(data.team?.name||'your team')+'!';
+  btn.style.background='var(--green)';
+  setTimeout(()=>{window.location.href='/simulation.html?game='+data.game.id},1000);
 }
 
 init();
