@@ -22,7 +22,7 @@ select,input[type=number],input[type=text]{padding:8px 12px;border-radius:6px;bo
 select:focus,input:focus{outline:none;border-color:var(--primary)}
 
 /* Top Bar */
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 24px;border-bottom:1px solid var(--border);background:var(--card);flex-shrink:0}
 .topbar-left{display:flex;align-items:center;gap:16px}
 .topbar .logo{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .game-info{display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted)}
@@ -35,9 +35,9 @@ select:focus,input:focus{outline:none;border-color:var(--primary)}
 
 /* Sidebar */
 .sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
-.sidebar-section{padding:8px 0}
-.sidebar-label{font-size:.7rem;text-transform:uppercase;color:var(--muted);padding:8px 16px 4px;letter-spacing:.05em;font-weight:600}
-.sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:.85rem;cursor:pointer;transition:all .15s;color:var(--muted);border-left:3px solid transparent}
+.sidebar-section{padding:4px 0}
+.sidebar-label{font-size:.65rem;text-transform:uppercase;color:var(--muted);padding:6px 16px 2px;letter-spacing:.05em;font-weight:600}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:5px 16px;font-size:.82rem;cursor:pointer;transition:all .15s;color:var(--muted);border-left:3px solid transparent}
 .sidebar-item:hover{background:rgba(59,130,246,.05);color:var(--text)}
 .sidebar-item.active{background:rgba(59,130,246,.08);color:var(--primary);border-left-color:var(--primary);font-weight:600}
 .sidebar-divider{height:1px;background:var(--border);margin:4px 0}
@@ -163,12 +163,15 @@ tr:hover td{background:rgba(59,130,246,.03)}
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Reports</div>
-      <div class="sidebar-item" data-tab="results"><span>📈</span><span>Results</span></div>
-      <div class="sidebar-item" data-tab="financials"><span>💰</span><span>Financials</span></div>
-      <div class="sidebar-item" data-tab="research"><span>🔍</span><span>Market Research</span></div>
-      <div class="sidebar-item" data-tab="leaderboard"><span>🏆</span><span>Rankings vs AI</span></div>
-    </div>
+      <div class="sidebar-label" id="reportsToggle" onclick="toggleReports()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
+        <span>Reports</span><span id="reportsArrow" style="font-size:.6rem;transition:transform .2s">▼</span>
+      </div>
+      <div id="reportsMenu" style="display:none">
+        <div class="sidebar-item" data-tab="results"><span>📈</span><span>Results</span></div>
+        <div class="sidebar-item" data-tab="financials"><span>💰</span><span>Financials</span></div>
+        <div class="sidebar-item" data-tab="research"><span>🔍</span><span>Market Research</span></div>
+        <div class="sidebar-item" data-tab="leaderboard"><span>🏆</span><span>Rankings vs AI</span></div>
+      </div>
     </div>
     <div class="sidebar-footer">
       <button class="btn btn-green" style="width:100%" onclick="submitDecisions()" id="submitBtn">Submit Q<span id="submitQ">1</span></button>
@@ -442,12 +445,30 @@ function updateEstCost(){
 }
 
 // Tab navigation
+function toggleReports(){
+  const menu=document.getElementById('reportsMenu');
+  const arrow=document.getElementById('reportsArrow');
+  if(menu.style.display==='none'){
+    menu.style.display='block';
+    arrow.style.transform='rotate(180deg)';
+  }else{
+    menu.style.display='none';
+    arrow.style.transform='rotate(0deg)';
+  }
+}
+
 document.querySelectorAll('.sidebar-item').forEach(item=>{
   item.addEventListener('click',()=>{
     document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
     item.classList.add('active');
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
     document.getElementById('tab-'+item.dataset.tab).classList.add('active');
+    // Auto-expand reports if a report tab is activated
+    const reportTabs=['results','financials','research','leaderboard'];
+    if(reportTabs.includes(item.dataset.tab)){
+      document.getElementById('reportsMenu').style.display='block';
+      document.getElementById('reportsArrow').style.transform='rotate(180deg)';
+    }
   });
 });
 
