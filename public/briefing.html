@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Brief — MarketSim Live</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f0f2f5;--card:#ffffff;--border:#e2e8f0;--primary:#3b82f6;--primary-hover:#2563eb;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#1e293b;--muted:#64748b;--surface:#f8fafc;--dark-bg:#0a0e1a}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* Top bar */
+.topbar{background:var(--dark-bg);padding:12px 40px;display:flex;align-items:center;justify-content:space-between}
+.topbar a{color:#94a3b8;text-decoration:none;font-size:.9rem;display:flex;align-items:center;gap:6px;transition:color .2s}
+.topbar a:hover{color:#e2e8f0}
+.topbar .logo{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* Header */
+.brief-header{background:var(--card);border-bottom:1px solid var(--border);padding:32px 0 0}
+.brief-header-inner{max-width:900px;margin:0 auto;padding:0 40px}
+.scenario-badge{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.scenario-icon-lg{width:72px;height:72px;border-radius:16px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2.4rem}
+.scenario-title{font-size:1.8rem;font-weight:700;color:var(--text)}
+.scenario-subtitle{color:var(--primary);font-size:.95rem;font-weight:500;margin-top:2px}
+.difficulty-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:8px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin-top:24px;border-bottom:none}
+.tab{padding:14px 24px;font-size:.95rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+
+/* Content */
+.brief-content{max-width:900px;margin:0 auto;padding:32px 40px 120px}
+.tab-panel{display:none;animation:fadeIn .3s ease}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.content-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:36px 40px;margin-bottom:24px}
+
+.content-card h2{font-size:1.35rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.content-card h2 .highlight{color:var(--primary)}
+.content-card h3{font-size:1.1rem;font-weight:600;margin:28px 0 12px;padding-top:20px;border-top:1px solid var(--border)}
+.content-card h3:first-of-type{border-top:none;margin-top:20px;padding-top:0}
+.content-card p{color:var(--muted);line-height:1.7;margin-bottom:14px;font-size:.95rem}
+.content-card p strong{color:var(--text)}
+.content-card blockquote{border-left:3px solid var(--primary);padding:16px 20px;margin:20px 0;background:rgba(59,130,246,.04);border-radius:0 10px 10px 0}
+.content-card blockquote p{color:var(--text);font-style:italic;margin:0;font-size:1.05rem}
+
+/* Metric table */
+.metric-grid{display:flex;flex-direction:column;gap:0;margin:20px 0}
+.metric-row{display:grid;grid-template-columns:200px 80px 1fr;gap:16px;padding:14px 16px;border-bottom:1px solid var(--border);align-items:center}
+.metric-row:last-child{border-bottom:none}
+.metric-row.header{background:var(--surface);border-radius:10px 10px 0 0;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.3px;color:var(--muted)}
+.metric-name{font-weight:600;font-size:.9rem}
+.metric-impact{font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:6px;text-align:center;width:fit-content}
+.impact-high{background:rgba(239,68,68,.1);color:var(--red)}
+.impact-medium{background:rgba(245,158,11,.1);color:var(--yellow)}
+.metric-desc{color:var(--muted);font-size:.88rem;line-height:1.4}
+
+/* Decision cards */
+.decision-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.decision-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:12px}
+.decision-icon{font-size:1.3rem;margin-top:2px}
+.decision-label{font-weight:600;font-size:.9rem;margin-bottom:3px}
+.decision-desc{color:var(--muted);font-size:.82rem;line-height:1.4}
+
+/* Segment cards */
+.segment-grid{display:flex;flex-direction:column;gap:12px;margin:20px 0}
+.segment-row{display:flex;align-items:flex-start;gap:16px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.segment-dot{width:12px;height:12px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.segment-name{font-weight:600;font-size:.92rem;margin-bottom:3px}
+.segment-profile{color:var(--muted);font-size:.82rem;font-style:italic;margin-bottom:4px}
+.segment-values{color:var(--muted);font-size:.85rem;line-height:1.4}
+
+/* Scenario details */
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
+.detail-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.detail-box .value{font-size:1.5rem;font-weight:700;color:var(--primary);margin-bottom:4px}
+.detail-box .label{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+
+/* Tips */
+.tip-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.tip-item:last-child{border-bottom:none}
+.tip-bullet{color:var(--primary);font-weight:700;font-size:1.1rem;margin-top:-1px;flex-shrink:0}
+.tip-text{color:var(--muted);font-size:.9rem;line-height:1.6}
+.tip-text strong{color:var(--text)}
+
+/* CTA Footer */
+.cta-footer{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:16px 40px;display:flex;align-items:center;justify-content:center;gap:16px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.05)}
+.cta-btn{padding:14px 48px;border-radius:12px;border:none;font-weight:700;font-size:1rem;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--primary),var(--accent));transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:8px}
+.cta-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,.3)}
+.cta-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.cta-secondary{padding:14px 32px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s}
+.cta-secondary:hover{border-color:var(--primary);color:var(--primary)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+
+/* Inactive segments */
+.segment-row.inactive{opacity:.45}
+.segment-row.inactive::after{content:'Not in this scenario';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--muted);font-style:italic}
+.segment-row{position:relative}
+
+@media(max-width:768px){
+  .topbar{padding:12px 20px}
+  .brief-header-inner{padding:0 20px}
+  .brief-content{padding:24px 20px 120px}
+  .content-card{padding:24px 20px}
+  .metric-row{grid-template-columns:1fr;gap:4px}
+  .decision-grid{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr}
+  .tabs{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">🚴 MarketSim Live</span>
+  <a href="/dashboard.html">← Back to Dashboard</a>
+</div>
+
+<div class="brief-header">
+  <div class="brief-header-inner">
+    <div class="scenario-badge">
+      <div class="scenario-icon-lg" id="scenarioIcon">🚲</div>
+      <div>
+        <div class="scenario-title" id="scenarioTitle">Loading...</div>
+        <div class="scenario-subtitle" id="scenarioSubtitle">MarketSim Campaign</div>
+        <div class="difficulty-pill" id="difficultyPill" style="background:rgba(16,185,129,.1);color:#10b981">Beginner</div>
+      </div>
+    </div>
+    <div class="tabs" id="tabsContainer">
+      <div class="tab active" data-tab="brief">Campaign Brief</div>
+      <div class="tab" data-tab="scenario">Scenario Objectives</div>
+      <div class="tab" data-tab="guide">Strategy Guide</div>
+    </div>
+  </div>
+</div>
+
+<div class="brief-content">
+
+  <!-- TAB 1: Campaign Brief -->
+  <div class="tab-panel active" id="panel-brief">
+    <div class="content-card">
+      <h2>Campaign Brief: <span class="highlight" id="briefScenarioName">Carbon Fiber Bikes</span></h2>
+      <p>You have just been appointed to lead the marketing division of a major international bicycle company. Your parent company has developed two breakthrough technologies: an economical new form of carbon fiber and an advanced 3D printer that can produce a custom bike frame in hours, not days.</p>
+      <p>Gone is the cluttered bike store filled with dozens of ill-fitting bikes. In its place: a sleek showroom of carefully crafted models and a fitting area where every bike is tailored to the rider. The hassle of choosing the right bike becomes a premium experience.</p>
+      <blockquote><p>"Will buyers pay the premium for a lightweight, custom carbon fiber bike?"</p></blockquote>
+      <p>Nobody knows yet. That is your challenge. Over <strong>8 quarters</strong> of simulated business, you will build this division from scratch, prove the concept in the market, and deliver returns to your parent company.</p>
+
+      <h3>📊 Your Balanced Scorecard</h3>
+      <p>Your performance is measured by five dimensions. You cannot chase profit at the expense of customers, or grow market share while burning cash. The best teams excel across all areas:</p>
+      <div class="metric-grid">
+        <div class="metric-row header"><span>Metric</span><span>Impact</span><span>What It Measures</span></div>
+        <div class="metric-row"><span class="metric-name">Financial Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Operating profit relative to total revenue. Can you run a profitable business?</span></div>
+        <div class="metric-row"><span class="metric-name">Market Performance</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Your market share in target segments. Are you winning customers where it counts?</span></div>
+        <div class="metric-row"><span class="metric-name">Marketing Effectiveness</span><span class="metric-impact impact-medium">Medium</span><span class="metric-desc">Customer satisfaction with your brands and advertising. Do people love what you offer?</span></div>
+        <div class="metric-row"><span class="metric-name">Investment in Future</span><span class="metric-impact impact-medium">Medium</span><span class="metric-desc">R&D spending and new outlets as a share of revenue. Are you building for tomorrow?</span></div>
+        <div class="metric-row"><span class="metric-name">Creation of Wealth</span><span class="metric-impact impact-high">High</span><span class="metric-desc">Return on the parent company's total investment. Are you creating shareholder value?</span></div>
+      </div>
+      <p>Your <strong>Total Business Performance</strong> is the product of all five scores. A weakness in any single area has a multiplied negative effect on your overall result. Balance is everything.</p>
+    </div>
+
+    <div class="content-card">
+      <h2>🎯 Key Decisions Each Quarter</h2>
+      <p>Every quarter you make interconnected decisions across the full marketing mix:</p>
+      <div class="decision-grid">
+        <div class="decision-item"><span class="decision-icon">🚲</span><div><div class="decision-label">Brand Design</div><div class="decision-desc">Select components and features for each bike model. Match product attributes to customer needs.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">💰</span><div><div class="decision-label">Pricing Strategy</div><div class="decision-desc">Set prices per brand and region. Balance margins against competitive pressure.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">📢</span><div><div class="decision-label">Advertising</div><div class="decision-desc">Design ad copy, choose messaging themes, allocate media budgets across channels.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">🏪</span><div><div class="decision-label">Distribution</div><div class="decision-desc">Open and manage sales outlets. Decide where to establish presence.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">👥</span><div><div class="decision-label">Sales Force</div><div class="decision-desc">Hire, compensate, and deploy salespeople. Match staffing to demand potential.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">🔬</span><div><div class="decision-label">R&D Investment</div><div class="decision-desc">Fund research into new component technologies for future brand designs.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">🌐</span><div><div class="decision-label">Internet Marketing</div><div class="decision-desc">Manage web pages, SEO, paid search, and social media for each brand.</div></div></div>
+        <div class="decision-item"><span class="decision-icon">📊</span><div><div class="decision-label">Financial Planning</div><div class="decision-desc">Monitor cash flow, manage the balance sheet, fund growth without emergency loans.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Scenario Objectives -->
+  <div class="tab-panel" id="panel-scenario">
+    <div class="content-card">
+      <h2>🎯 Scenario: <span class="highlight" id="objectiveScenarioName">Loading...</span></h2>
+      <p id="scenarioDescription">Loading scenario details...</p>
+
+      <div class="detail-grid" id="scenarioDetails">
+        <div class="detail-box"><div class="value" id="detailCash">$5M</div><div class="label">Starting Cash</div></div>
+        <div class="detail-box"><div class="value" id="detailTeams">6</div><div class="label">Max Teams</div></div>
+        <div class="detail-box"><div class="value" id="detailBrands">5</div><div class="label">Max Brands</div></div>
+      </div>
+
+      <h3>🌍 Available Regions</h3>
+      <div id="regionsList" class="segment-grid"></div>
+
+      <h3>👤 Customer Segments</h3>
+      <p>These are the customer segments available in this scenario. Each has distinct needs, price sensitivity, and purchase motivations:</p>
+      <div id="segmentsList" class="segment-grid"></div>
+    </div>
+
+    <div class="content-card">
+      <h2>🔄 The Game Rhythm</h2>
+      <p>The simulation runs for <strong>8 quarters</strong> representing 2 years. Each quarter follows a natural cycle:</p>
+      <div class="decision-grid" style="grid-template-columns:1fr">
+        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">1️⃣</span><div><div class="decision-label">Review Results</div><div class="decision-desc">Study financials, market share, customer feedback, and competitor moves from the previous quarter.</div></div></div>
+        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">2️⃣</span><div><div class="decision-label">Analyze the Market</div><div class="decision-desc">Use research reports to understand customer needs, competitor strategies, and emerging opportunities.</div></div></div>
+        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">3️⃣</span><div><div class="decision-label">Make Decisions</div><div class="decision-desc">Adjust brands, pricing, ads, distribution, and investments based on your analysis.</div></div></div>
+        <div class="decision-item"><span class="decision-icon" style="font-size:1.6rem">4️⃣</span><div><div class="decision-label">Submit & Compete</div><div class="decision-desc">Your decisions go head-to-head against every other team in the simulation engine.</div></div></div>
+      </div>
+      <p style="margin-top:16px">Early quarters focus on getting established. Mid-game shifts to optimization and competitive response. Final quarters are about execution, profitability, and positioning for the future.</p>
+    </div>
+  </div>
+
+  <!-- TAB 3: Strategy Guide -->
+  <div class="tab-panel" id="panel-guide">
+    <div class="content-card">
+      <h2>💡 How the Market Works</h2>
+      <h3>You Are a Market Maker</h3>
+      <p>This is not a simulation where demand magically appears. At the start, <strong>demand is zero</strong>. You must create it. Every sale results from having the right brand, at the right price, with compelling advertising, in a location customers can find you, with salespeople to close the deal.</p>
+      <p>If no teams target a segment, demand stays dormant. If several teams compete aggressively for the same segment, total demand can exceed the reported market potential. Your collective marketing efforts shape the entire market.</p>
+
+      <h3>Customer Segments</h3>
+      <p>The carbon fiber bike market is divided into five customer segments. Each values different things:</p>
+      <div class="segment-grid">
+        <div class="segment-row"><div class="segment-dot" style="background:#3b82f6"></div><div><div class="segment-name">Worker</div><div class="segment-profile">Daily commuters</div><div class="segment-values">Reliability, comfort, durability, ease of use. Practical over flashy.</div></div></div>
+        <div class="segment-row"><div class="segment-dot" style="background:#10b981"></div><div><div class="segment-name">Recreation</div><div class="segment-profile">Weekend riders, fitness enthusiasts</div><div class="segment-values">Fun, good looks, reasonable price. A bike they enjoy riding.</div></div></div>
+        <div class="segment-row"><div class="segment-dot" style="background:#f59e0b"></div><div><div class="segment-name">Mountain</div><div class="segment-profile">Trail and off-road riders</div><div class="segment-values">Ruggedness, suspension, technical performance on rough terrain.</div></div></div>
+        <div class="segment-row"><div class="segment-dot" style="background:#ef4444"></div><div><div class="segment-name">Speed</div><div class="segment-profile">Road cyclists, racers</div><div class="segment-values">Light weight, aerodynamics, top-tier components. Performance is everything.</div></div></div>
+        <div class="segment-row"><div class="segment-dot" style="background:#8b5cf6"></div><div><div class="segment-name">Youth</div><div class="segment-profile">Younger riders, students</div><div class="segment-values">Price-conscious but drawn to style, innovation, and brand coolness.</div></div></div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h2>🏆 Tips for Success</h2>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Think benefits, not features.</strong> Customers buy what a bike does for them, not its spec sheet. A mountain biker wants confidence on rough trails. A commuter wants comfort on the ride home.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Price with purpose.</strong> Don't just undercut the competition. Understand what each segment is willing to pay and where your brand sits on the value curve.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Advertising must be truthful.</strong> Your ads are evaluated for accuracy. False claims can trigger lawsuits from competitors. Advertise benefits your brand actually delivers.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Watch your cash.</strong> Growth costs money. Opening outlets, investing in R&D, and hiring salespeople all consume cash before they generate returns.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Study the competition.</strong> Every quarter you receive market research on competitors' brands, prices, and ads. Use it.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Invest in R&D early.</strong> Advanced components take time to develop. Teams that invest early unlock better brand options in later quarters.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Expand thoughtfully.</strong> Geographic expansion opens new revenue but stretches resources. It's better to dominate one region than be mediocre everywhere.</span></div>
+      <div class="tip-item"><span class="tip-bullet">→</span><span class="tip-text"><strong>Iterate and adapt.</strong> No plan survives first contact with the market. The winning teams aren't the ones with the best original strategy — they're the ones who learn fastest.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Fixed CTA Footer -->
+<div class="cta-footer">
+  <button class="cta-secondary" onclick="window.location.href='/dashboard.html'">← Back</button>
+  <button class="cta-btn" id="startBtn" onclick="startCampaign()">
+    🚀 Start Campaign
+  </button>
+</div>
+
+<script>
+const API = window.location.origin;
+const params = new URLSearchParams(window.location.search);
+const scenarioId = params.get('scenario');
+
+// Scenario-specific content
+const SCENARIO_CONTENT = {
+  'local-launch': {
+    description: 'Start small and prove the concept. Launch your carbon fiber bike brand in Latin America, targeting daily commuters and weekend recreational riders. With $6M in starting cash and only two customer segments to master, this is the ideal scenario to learn the fundamentals of brand design, pricing, advertising, and distribution.',
+    regions: [{ name: 'Latin America (LATAM)', icon: '🌎', desc: 'Growing market with price-sensitive but aspirational consumers. Strong commuter culture in major cities.' }],
+    segments: ['Worker', 'Recreation'],
+    cash: '$6M', teams: '4', brands: '3'
+  },
+  'mountain-expedition': {
+    description: 'Take on three demanding segments in the competitive European market. Mountain bikers demand rugged performance, recreation riders want versatility, and speed enthusiasts chase pure performance. Sharper segmentation and nuanced brand positioning are essential to succeed.',
+    regions: [{ name: 'Europe', icon: '🏔️', desc: 'Mature cycling market with sophisticated buyers. Strong outdoor culture and willingness to pay for quality.' }],
+    segments: ['Mountain', 'Recreation', 'Speed'],
+    cash: '$5M', teams: '6', brands: '4'
+  },
+  'global-domination': {
+    description: 'The full challenge. Manage brands across three global regions serving five distinct customer segments. Every decision ripples across markets — pricing in Latin America affects your ability to fund R&D for European mountain bikers. Maximum complexity, maximum reward.',
+    regions: [
+      { name: 'Latin America (LATAM)', icon: '🌎', desc: 'Growing market with price-sensitive consumers.' },
+      { name: 'Europe', icon: '🏔️', desc: 'Mature cycling market with premium buyers.' },
+      { name: 'Asia-Pacific (APAC)', icon: '🌏', desc: 'Fast-growing, tech-savvy consumer base.' }
+    ],
+    segments: ['Worker', 'Recreation', 'Youth', 'Mountain', 'Speed'],
+    cash: '$5M', teams: '6', brands: '5'
+  },
+  'speed-innovation': {
+    description: 'A focused, high-intensity scenario in the fast-moving Asia-Pacific market. Two tech-savvy segments — speed enthusiasts and youth riders — demand innovation, performance, and cutting-edge design. Heavy R&D investment and bold marketing are the keys to winning.',
+    regions: [{ name: 'Asia-Pacific (APAC)', icon: '🌏', desc: 'Fast-growing market driven by technology adoption and a young, active population.' }],
+    segments: ['Speed', 'Youth'],
+    cash: '$4.5M', teams: '4', brands: '4'
+  }
+};
+
+const SEGMENT_DATA = {
+  Worker: { color: '#3b82f6', profile: 'Daily commuters', values: 'Reliability, comfort, durability, ease of use. Practical over flashy.' },
+  Recreation: { color: '#10b981', profile: 'Weekend riders, fitness enthusiasts', values: 'Fun, good looks, reasonable price. A bike they enjoy riding.' },
+  Mountain: { color: '#f59e0b', profile: 'Trail and off-road riders', values: 'Ruggedness, suspension, technical performance on rough terrain.' },
+  Speed: { color: '#ef4444', profile: 'Road cyclists, racers', values: 'Light weight, aerodynamics, top-tier components. Performance is everything.' },
+  Youth: { color: '#8b5cf6', profile: 'Younger riders, students', values: 'Price-conscious but drawn to style, innovation, and brand coolness.' }
+};
+
+async function apiFetch(url, opts = {}) {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  try {
+    const res = await fetch(API + url, { ...opts, headers });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(e) { return { error: 'Server error' }; }
+  } catch(e) { return { error: 'Network error' }; }
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+async function init() {
+  if (!scenarioId || !SCENARIO_CONTENT[scenarioId]) {
+    window.location.href = '/dashboard.html';
+    return;
+  }
+
+  // Check auth
+  const authData = await apiFetch('/api/auth/me');
+  if (!authData.user) { window.location.href = '/index.html'; return; }
+
+  // Fetch scenario metadata
+  const data = await apiFetch('/api/game/quick-join');
+  const scenarios = data.scenarios || [];
+  const scenario = scenarios.find(s => s.id === scenarioId);
+  const content = SCENARIO_CONTENT[scenarioId];
+
+  if (scenario) {
+    document.getElementById('scenarioIcon').textContent = scenario.icon;
+    document.getElementById('scenarioTitle').textContent = scenario.name;
+    document.getElementById('scenarioSubtitle').textContent = scenario.tagline;
+    document.getElementById('difficultyPill').textContent = scenario.difficulty;
+    document.getElementById('difficultyPill').style.background = scenario.difficultyColor + '18';
+    document.getElementById('difficultyPill').style.color = scenario.difficultyColor;
+    document.getElementById('briefScenarioName').textContent = scenario.name;
+    document.getElementById('objectiveScenarioName').textContent = scenario.name;
+    document.title = scenario.name + ' — MarketSim Campaign Brief';
+  }
+
+  // Populate scenario tab
+  document.getElementById('scenarioDescription').textContent = content.description;
+  document.getElementById('detailCash').textContent = content.cash;
+  document.getElementById('detailTeams').textContent = content.teams;
+  document.getElementById('detailBrands').textContent = content.brands;
+
+  // Regions
+  document.getElementById('regionsList').innerHTML = content.regions.map(r =>
+    '<div class="segment-row"><div class="segment-dot" style="background:var(--primary)"></div><div><div class="segment-name">' + r.icon + ' ' + r.name + '</div><div class="segment-values">' + r.desc + '</div></div></div>'
+  ).join('');
+
+  // Segments
+  document.getElementById('segmentsList').innerHTML = content.segments.map(name => {
+    const seg = SEGMENT_DATA[name];
+    return '<div class="segment-row"><div class="segment-dot" style="background:' + seg.color + '"></div><div><div class="segment-name">' + name + '</div><div class="segment-profile">' + seg.profile + '</div><div class="segment-values">' + seg.values + '</div></div></div>';
+  }).join('');
+
+  // Check if already in game for this scenario
+  const listData = await apiFetch('/api/game/list');
+  const games = listData.games || [];
+  const existingGame = games.find(g => g.market_scenario === scenarioId && (g.status === 'lobby' || g.status === 'active'));
+  if (existingGame) {
+    document.getElementById('startBtn').innerHTML = '▶ Continue Campaign';
+    document.getElementById('startBtn').dataset.gameId = existingGame.id;
+  }
+}
+
+async function startCampaign() {
+  const btn = document.getElementById('startBtn');
+
+  // If already in a game, go directly
+  if (btn.dataset.gameId) {
+    window.location.href = '/simulation.html?game=' + btn.dataset.gameId;
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Matching you with opponents...';
+  btn.disabled = true;
+
+  const data = await apiFetch('/api/game/quick-join', {
+    method: 'POST',
+    body: JSON.stringify({ scenarioId })
+  });
+
+  if (data.error) {
+    alert(data.error);
+    btn.innerHTML = '🚀 Start Campaign';
+    btn.disabled = false;
+    return;
+  }
+
+  btn.innerHTML = '✓ Joined as ' + (data.team?.name || 'your team') + '!';
+  btn.style.background = 'var(--green)';
+  setTimeout(() => {
+    window.location.href = '/simulation.html?game=' + data.game.id;
+  }, 1000);
+}
+
+init();
+</script>
+</body>
+</html>

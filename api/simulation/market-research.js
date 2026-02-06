@@ -1,35 +1,31 @@
-const { requireAuth, handleCors } = require('../../lib/auth');
-const { TeamMemberDB, MarketResearchDB, GameDB } = require('../../lib/db');
+// api/simulation/market-research.js
+import { requireAuth, cors } from '../../lib/auth.js';
+import { MarketResearchDB, GameDB } from '../../lib/db.js';
 
-module.exports = async (req, res) => {
-  if (handleCors(req, res)) return;
-  
+export default async function handler(req, res) {
+  cors(res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const decoded = await requireAuth(req, res);
+  if (!decoded) return;
+
   try {
-    const user = await requireAuth(req);
-    if (!user) return res.status(401).json({ error: 'Authentication required' });
-    
-    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-    
-    const { gameId, quarter } = req.query;
-    if (!gameId) return res.status(400).json({ error: 'Game ID required' });
-    
-    const game = await GameDB.getWithTeams(gameId);
+    const { game_id, quarter } = req.query;
+    if (!game_id) return res.status(400).json({ error: 'Game ID required' });
+
+    const game = await GameDB.findById(game_id);
     if (!game) return res.status(404).json({ error: 'Game not found' });
-    
+
     const q = quarter !== undefined ? parseInt(quarter) : Math.max(0, game.current_quarter - 1);
-    const research = await MarketResearchDB.findByQuarter(gameId, q);
-    
+    const research = await MarketResearchDB.findByQuarter(game_id, q);
+
     res.json({
       quarter: q,
-      research: research ? {
-        segmentDemands: research.segment_demands,
-        competitorPrices: research.competitor_prices,
-        brandJudgments: research.brand_judgments,
-        marketTrends: research.market_trends
-      } : null
+      research: research ? { segmentDemands: research.segment_demands, competitorPrices: research.competitor_prices, brandJudgments: research.brand_judgments, marketTrends: research.market_trends } : null
     });
   } catch (error) {
     console.error('Market research error:', error);
     res.status(500).json({ error: 'Failed to get market research' });
   }
-};
+}

@@ -166,47 +166,14 @@ async function loadScenarios() {
       '</div>' +
       '<div class="scenario-footer">' +
         '<span class="player-count" id="count-' + s.id + '"></span>' +
-        '<button class="play-btn" id="btn-' + s.id + '" onclick="joinScenario(\'' + s.id + '\')">▶ Play Now</button>' +
+        '<button class="play-btn" id="btn-' + s.id + '" onclick="joinScenario(\'' + s.id + '\')">📋 View Brief</button>' +
       '</div>' +
     '</div>';
   }).join('');
 }
 
-async function joinScenario(scenarioId) {
-  var btn = document.getElementById('btn-' + scenarioId);
-  var origText = btn.innerHTML;
-  btn.innerHTML = '<span class="spinner"></span>Matching...';
-  btn.disabled = true;
-
-  try {
-    var data = await apiFetch('/api/game/quick-join', {
-      method: 'POST',
-      body: JSON.stringify({ scenarioId: scenarioId })
-    });
-
-    if (data.error) {
-      alert(data.error);
-      btn.innerHTML = origText;
-      btn.disabled = false;
-      return;
-    }
-
-    if (data.alreadyJoined) {
-      window.location.href = '/simulation.html?game=' + data.game.id;
-    } else {
-      btn.innerHTML = '✓ Joined as ' + esc(data.team.name);
-      btn.style.background = 'var(--green)';
-      btn.style.color = '#fff';
-      setTimeout(function() {
-        window.location.href = '/simulation.html?game=' + data.game.id;
-      }, 1200);
-    }
-  } catch (err) {
-    console.error('Join error:', err);
-    alert('Something went wrong. Please try again.');
-    btn.innerHTML = origText;
-    btn.disabled = false;
-  }
+function joinScenario(scenarioId) {
+  window.location.href = '/briefing.html?scenario=' + scenarioId;
 }
 
 async function loadGames() {

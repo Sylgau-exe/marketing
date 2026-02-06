@@ -144,8 +144,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section" id="instructorNav" style="display:none">
-      <div class="sidebar-label">Instructor</div>
-      <div class="sidebar-item" data-tab="instructor"><span>👨‍🏫</span><span>Game Mgmt</span></div>
+    </div>
     </div>
     <div class="sidebar-footer">
       <button class="btn btn-green" style="width:100%" onclick="submitDecisions()" id="submitBtn">Submit Q<span id="submitQ">1</span></button>
@@ -412,20 +411,18 @@ async function init(){
   team=gameData.team;
   brands=gameData.brands||[];
 
-  document.getElementById('gameName').textContent=game.name||'Game';
-  document.getElementById('gameCode').textContent=game.code;
+  document.getElementById('gameName').textContent=game.name||game.code||'Game';
+  document.getElementById('gameCode').textContent=game.code||'';
   document.getElementById('quarterBadge').textContent=game.current_quarter===0?'Lobby':'Q'+game.current_quarter;
   document.getElementById('submitQ').textContent=game.current_quarter||1;
   if(team){
-    document.getElementById('teamName').textContent=(team.logo_emoji||'🏢')+' '+team.name;
+    document.getElementById('teamName').textContent=(team.logo_emoji||'🏢')+' '+(team.name||'My Team');
     document.getElementById('cashDisplay').textContent='$'+Number(team.cash_balance||5000000).toLocaleString();
+  } else {
+    document.getElementById('teamName').textContent='No team assigned';
   }
 
-  // Show instructor tab
-  if(game.instructor_id===user.id||user.is_admin){
-    document.getElementById('instructorNav').style.display='';
-    loadInstructorPanel();
-  }
+  // Instructor panel removed — using preset scenarios only
 
   initSliders();
   updateEstCost();
