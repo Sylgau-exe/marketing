@@ -1,4 +1,4 @@
-// api/simulation/leaderboard.js
+// api/simulation/leaderboard.js - Solo mode: player vs AI rankings
 import { requireAuth, cors } from '../../lib/auth.js';
 import { GameDB, TeamDB, ResultDB } from '../../lib/db.js';
 
@@ -24,17 +24,31 @@ export default async function handler(req, res) {
       const allResults = await ResultDB.findAllByTeam(team.id);
       const latest = allResults.length > 0 ? allResults[allResults.length - 1] : null;
       leaderboard.push({
-        teamId: team.id, teamName: team.name, logoEmoji: team.logo_emoji,
-        quarters: allResults.map(r => ({ quarter: r.quarter, revenue: parseFloat(r.revenue), netIncome: parseFloat(r.net_income), balancedScorecard: r.balanced_scorecard })),
+        teamId: team.id,
+        name: team.name,
+        logo_emoji: team.logo_emoji,
+        isPlayer: !team.is_ai,
+        isAi: !!team.is_ai,
+        quarters: allResults.map(r => ({
+          quarter: r.quarter,
+          revenue: parseFloat(r.revenue || r.total_revenue || 0),
+          netIncome: parseFloat(r.net_income || 0),
+          balancedScorecard: r.balanced_scorecard
+        })),
         currentScorecard: latest ? latest.balanced_scorecard : 0,
-        cumulativeScorecard: latest ? (latest.cumulative_scorecard || latest.balanced_scorecard) : 0,
-        totalRevenue: allResults.reduce((s, r) => s + parseFloat(r.revenue), 0),
-        totalProfit: allResults.reduce((s, r) => s + parseFloat(r.net_income), 0)
+        cumulative_scorecard: latest ? (latest.cumulative_scorecard || latest.balanced_scorecard) : 0,
+        balanced_scorecard: latest ? latest.balanced_scorecard : 0,
+        totalRevenue: allResults.reduce((s, r) => s + parseFloat(r.revenue || r.total_revenue || 0), 0),
+        totalProfit: allResults.reduce((s, r) => s + parseFloat(r.net_income || 0), 0)
       });
     }
 
-    leaderboard.sort((a, b) => (b.cumulativeScorecard || 0) - (a.cumulativeScorecard || 0));
-    res.json({ gameId: game_id, currentQuarter: game.current_quarter, leaderboard: leaderboard.map((t, i) => ({ ...t, rank: i + 1 })) });
+    leaderboard.sort((a, b) => (b.cumulative_scorecard || 0) - (a.cumulative_scorecard || 0));
+    res.json({
+      gameId: game_id,
+      currentQuarter: game.current_quarter,
+      leaderboard: leaderboard.map((t, i) => ({ ...t, rank: i + 1 }))
+    });
   } catch (error) {
     console.error('Leaderboard error:', error);
     res.status(500).json({ error: 'Failed to get leaderboard' });

@@ -36,17 +36,15 @@ export default async function handler(req, res) {
     } catch(e) {}
 
     try { teamCount = await sql`SELECT COUNT(*) as count FROM teams`; } catch(e) {}
-    try { decisionCount = await sql`SELECT COUNT(*) as count FROM decisions`; } catch(e) {}
+    try { decisionCount = await sql`SELECT COUNT(*) as count FROM quarterly_decisions`; } catch(e) {}
     try { newUsers7d = await sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`; } catch(e) {}
     try { newUsers30d = await sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '30 days'`; } catch(e) {}
 
     try {
       activeUsers30d = await sql`
-        SELECT COUNT(DISTINCT tm.user_id) as count
-        FROM team_members tm
-        JOIN teams t ON t.id = tm.team_id
-        JOIN games g ON g.id = t.game_id
-        WHERE g.status IN ('lobby', 'active')`;
+        SELECT COUNT(DISTINCT g.user_id) as count
+        FROM games g
+        WHERE g.status IN ('active') AND g.updated_at > NOW() - INTERVAL '30 days'`;
     } catch(e) {}
 
     try {
@@ -80,7 +78,7 @@ export default async function handler(req, res) {
     try {
       const rg = await sql`
         SELECT g.name, g.market_scenario, g.created_at, u.name as creator
-        FROM games g LEFT JOIN users u ON u.id = g.instructor_id
+        FROM games g LEFT JOIN users u ON u.id = g.user_id
         ORDER BY g.created_at DESC LIMIT 5`;
       rg.rows.forEach(g => activityItems.push({
         type: 'game', icon: '🎮',

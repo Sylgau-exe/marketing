@@ -1,6 +1,6 @@
-// api/game/details.js - Get full game details for simulation page
+// api/game/details.js - Get solo simulation details
 import { requireAuth, cors } from '../../lib/auth.js';
-import { GameDB, TeamDB, TeamMemberDB, SegmentDB, ResultDB, BrandDB } from '../../lib/db.js';
+import { GameDB, TeamDB, SegmentDB, ResultDB, BrandDB } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -17,58 +17,103 @@ export default async function handler(req, res) {
     const game = await GameDB.findById(gameId);
     if (!game) return res.status(404).json({ error: 'Game not found' });
 
-    const isInstructor = game.instructor_id === decoded.userId;
+    // Solo mode: check if user owns this game
+    if (String(game.user_id) !== String(decoded.userId) && !decoded.isAdmin) {
+      return res.status(403).json({ error: 'You do not have access to this simulation' });
+    }
+
+    // Get all teams
     const teams = await TeamDB.findByGame(gameId);
-    const teamsWithMembers = [];
-    let userTeam = null;
+    const playerTeam = teams.find(t => !t.is_ai);
+    const aiTeams = teams.filter(t => t.is_ai);
 
-    for (const team of teams) {
-      const members = await TeamMemberDB.findByTeam(team.id);
-      const isMember = members.some(m => m.user_id === decoded.userId);
-      if (isMember) {
-        const memberRecord = members.find(m => m.user_id === decoded.userId);
-        userTeam = { ...team, role: memberRecord.role };
-      }
-      teamsWithMembers.push({
-        id: team.id, name: team.name, logoEmoji: team.logo_emoji,
-        cashBalance: (isInstructor || isMember) ? team.cash_balance : undefined,
-        hasSubmitted: team.has_submitted, memberCount: members.length,
-        members: members.map(m => ({ userId: m.user_id, name: m.name || 'Unknown', role: m.role }))
-      });
+    if (!playerTeam) {
+      return res.status(404).json({ error: 'Player team not found' });
     }
 
-    if (!isInstructor && !userTeam) {
-      return res.status(403).json({ error: 'You do not have access to this game' });
-    }
-
+    // Get player brands
     let brands = [];
-    if (userTeam) { try { brands = await BrandDB.findByTeam(userTeam.id); } catch (e) {} }
+    try { brands = await BrandDB.findByTeam(playerTeam.id); } catch (e) {}
 
+    // Get segments
     let segments = [];
     try { segments = await SegmentDB.getForGame(gameId); } catch (e) {}
 
+    // Get latest results for player
     let latestResults = null;
-    if (game.current_quarter > 0 && userTeam) {
-      try { latestResults = await ResultDB.findByTeamAndQuarter(userTeam.id, game.current_quarter - 1); } catch (e) {}
+    if (game.current_quarter > 1) {
+      try {
+        latestResults = await ResultDB.findByTeamAndQuarter(playerTeam.id, game.current_quarter - 1);
+      } catch (e) {}
     }
 
+    // Build competitor info (AI teams with limited visibility)
+    const competitors = [];
+    for (const aiTeam of aiTeams) {
+      const comp = { id: aiTeam.id, name: aiTeam.name, logoEmoji: aiTeam.logo_emoji };
+      // Show AI results after Q1 (market research)
+      if (game.current_quarter > 1) {
+        try {
+          const aiResult = await ResultDB.findByTeamAndQuarter(aiTeam.id, game.current_quarter - 1);
+          if (aiResult) {
+            comp.marketShare = aiResult.market_share_primary;
+            comp.revenue = parseFloat(aiResult.total_revenue || aiResult.revenue || 0);
+            comp.balancedScorecard = aiResult.balanced_scorecard;
+          }
+        } catch (e) {}
+      }
+      competitors.push(comp);
+    }
+
+    // Leaderboard (player + AI)
     let leaderboard = [];
     if (game.current_quarter > 1) {
       for (const team of teams) {
         try {
           const result = await ResultDB.findByTeamAndQuarter(team.id, game.current_quarter - 1);
-          if (result) leaderboard.push({ teamId: team.id, teamName: team.name, logoEmoji: team.logo_emoji, balancedScorecard: result.balanced_scorecard, cumulativeScorecard: result.cumulative_scorecard || result.balanced_scorecard });
+          if (result) {
+            leaderboard.push({
+              teamName: team.name, logoEmoji: team.logo_emoji,
+              isPlayer: !team.is_ai,
+              balancedScorecard: result.balanced_scorecard,
+              revenue: parseFloat(result.total_revenue || result.revenue || 0),
+              marketShare: result.market_share_primary
+            });
+          }
         } catch (e) {}
       }
-      leaderboard.sort((a, b) => (b.cumulativeScorecard || 0) - (a.cumulativeScorecard || 0));
+      leaderboard.sort((a, b) => (b.balancedScorecard || 0) - (a.balancedScorecard || 0));
     }
 
     res.json({
-      game: { id: game.id, code: game.code, name: game.name, status: game.status, current_quarter: game.current_quarter, instructor_id: game.instructor_id, max_teams: game.max_teams, quarter_deadline: game.quarter_deadline, settings: game.settings },
-      team: userTeam ? { id: userTeam.id, name: userTeam.name, logo_emoji: userTeam.logo_emoji, role: userTeam.role, cash_balance: userTeam.cash_balance, has_submitted: userTeam.has_submitted } : null,
-      brands: brands.map(b => ({ id: b.id, name: b.name, target_segment: b.target_segment, frame_quality: b.frame_quality, wheels_quality: b.wheels_quality, drivetrain_quality: b.drivetrain_quality, brakes_quality: b.brakes_quality, suspension_quality: b.suspension_quality, seat_quality: b.seat_quality, handlebars_quality: b.handlebars_quality, electronics_quality: b.electronics_quality, overall_quality: b.overall_quality, unit_cost: b.unit_cost })),
-      teams: teamsWithMembers, segments, leaderboard,
-      latestResults: latestResults ? { quarter: latestResults.quarter, demand: latestResults.total_demand, unitsSold: latestResults.units_sold, revenue: parseFloat(latestResults.revenue), netIncome: parseFloat(latestResults.net_income), marketShare: latestResults.market_share_primary, balancedScorecard: latestResults.balanced_scorecard } : null
+      game: {
+        id: game.id, name: game.name, status: game.status,
+        current_quarter: game.current_quarter, market_scenario: game.market_scenario, settings: game.settings
+      },
+      team: {
+        id: playerTeam.id, name: playerTeam.name,
+        logo_emoji: playerTeam.logo_emoji,
+        cash_balance: playerTeam.cash_balance,
+        has_submitted: playerTeam.has_submitted
+      },
+      brands: brands.map(b => ({
+        id: b.id, name: b.name, target_segment: b.target_segment,
+        frame_quality: b.frame_quality, wheels_quality: b.wheels_quality,
+        drivetrain_quality: b.drivetrain_quality, brakes_quality: b.brakes_quality,
+        suspension_quality: b.suspension_quality, seat_quality: b.seat_quality,
+        handlebars_quality: b.handlebars_quality, electronics_quality: b.electronics_quality,
+        overall_quality: b.overall_quality, unit_cost: b.unit_cost,
+        is_active: true, status: 'active'
+      })),
+      segments, competitors, leaderboard,
+      latestResults: latestResults ? {
+        quarter: latestResults.quarter,
+        demand: latestResults.total_demand, unitsSold: latestResults.units_sold || latestResults.total_units_sold,
+        revenue: parseFloat(latestResults.total_revenue || latestResults.revenue || 0),
+        netIncome: parseFloat(latestResults.net_income || 0),
+        marketShare: latestResults.market_share_primary,
+        balancedScorecard: latestResults.balanced_scorecard
+      } : null
     });
   } catch (error) {
     console.error('Game details error:', error);

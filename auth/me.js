@@ -15,11 +15,11 @@ export default async function handler(req, res) {
     const user = await UserDB.findById(decoded.userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Count games this user is part of
+    // Count simulations this user has started
     let gameCount = 0;
     try {
       const games = await sql`
-        SELECT COUNT(*) as count FROM team_members WHERE user_id = ${user.id}
+        SELECT COUNT(*) as count FROM games WHERE user_id = ${user.id}
       `;
       gameCount = parseInt(games.rows[0].count);
     } catch (e) {
@@ -34,8 +34,11 @@ export default async function handler(req, res) {
         organization: user.organization,
         jobTitle: user.job_title,
         isAdmin: user.is_admin,
-        isInstructor: user.is_instructor,
         authProvider: user.auth_provider,
+        subscriptionTier: user.subscription_tier || 'free',
+        subscriptionStatus: user.subscription_status || 'inactive',
+        subscriptionType: user.subscription_type || null,
+        decisionsUsed: user.decisions_used || 0,
         createdAt: user.created_at,
         gameCount
       }

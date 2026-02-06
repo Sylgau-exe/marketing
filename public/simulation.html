@@ -400,6 +400,16 @@ function getComponentLabels(scenario){return PRODUCT_LABELS[scenario]||DEFAULT_L
 let COMPONENT_LABELS=DEFAULT_LABELS;
 const REGIONS=['LATAM','Europe','APAC'];
 
+// Scenario-specific active regions and suggested starting values
+const SCENARIO_CONFIG={
+  'local-launch':{regions:['LATAM'],suggestedPrice:799,suggestedProd:1000,suggestedAd:100000,suggestedReps:5,suggestedDist:50000,suggestedRD:100000},
+  'mountain-expedition':{regions:['Europe'],suggestedPrice:999,suggestedProd:800,suggestedAd:150000,suggestedReps:6,suggestedDist:75000,suggestedRD:150000},
+  'global-domination':{regions:['LATAM','Europe','APAC'],suggestedPrice:1099,suggestedProd:600,suggestedAd:200000,suggestedReps:4,suggestedDist:80000,suggestedRD:200000},
+  'speed-innovation':{regions:['APAC'],suggestedPrice:1299,suggestedProd:500,suggestedAd:200000,suggestedReps:5,suggestedDist:100000,suggestedRD:250000}
+};
+let ACTIVE_REGIONS=REGIONS;
+let SUGGESTED={price:899,prod:1000,ad:100000,reps:5,dist:50000,rd:100000};
+
 async function apiFetch(url,opts={}){
   const token=localStorage.getItem('token');
   const headers={'Content-Type':'application/json'};
@@ -454,6 +464,12 @@ async function init(){
   brands=gameData.brands||[];
   // Set product-specific component labels based on scenario
   COMPONENT_LABELS=getComponentLabels(game.market_scenario);
+  // Set scenario-specific regions and defaults
+  const scenCfg=SCENARIO_CONFIG[game.market_scenario];
+  if(scenCfg){
+    ACTIVE_REGIONS=scenCfg.regions;
+    SUGGESTED={price:scenCfg.suggestedPrice,prod:scenCfg.suggestedProd,ad:scenCfg.suggestedAd,reps:scenCfg.suggestedReps,dist:scenCfg.suggestedDist,rd:scenCfg.suggestedRD};
+  }
   // Update segment dropdowns with product-specific names
   const segLabels=COMPONENT_LABELS.segments||{};
   ['brandSegment','adTarget'].forEach(id=>{
@@ -482,9 +498,45 @@ async function init(){
   updateEstCost();
   loadDecisions();
   loadBrandList();
+  setupScenarioDefaults();
   loadResults();
   loadLeaderboard();
   loadResearch();
+}
+
+function setupScenarioDefaults(){
+  // Hide irrelevant region columns in static grids
+  const allRegions=['latam','europe','apac'];
+  const activeLC=ACTIVE_REGIONS.map(r=>r.toLowerCase());
+
+  // For each static region grid, hide columns for inactive regions
+  document.querySelectorAll('.region-grid').forEach(grid=>{
+    const cells=Array.from(grid.children);
+    // Standard 4-column grid: label + 3 regions
+    const cols=4;
+    const rows=Math.ceil(cells.length/cols);
+    for(let c=1;c<cols;c++){
+      const regionName=allRegions[c-1];
+      const hide=!activeLC.includes(regionName);
+      for(let r=0;r<rows;r++){
+        const idx=r*cols+c;
+        if(cells[idx]){cells[idx].style.display=hide?'none':''}
+      }
+    }
+    // Adjust grid columns
+    grid.style.gridTemplateColumns=`auto repeat(${ACTIVE_REGIONS.length},1fr)`;
+  });
+
+  // Set suggested defaults if no saved decisions
+  if(!decisions||!decisions.advertising||!Object.keys(decisions.advertising).some(k=>decisions.advertising[k]>0)){
+    activeLC.forEach(r=>{
+      const adEl=document.getElementById('ad_'+r);if(adEl&&!parseInt(adEl.value))adEl.value=SUGGESTED.ad;
+      const semEl=document.getElementById('sem_'+r);if(semEl&&!parseInt(semEl.value))semEl.value=Math.round(SUGGESTED.ad*0.3);
+      const sfEl=document.getElementById('sf_'+r);if(sfEl&&(!parseInt(sfEl.value)||parseInt(sfEl.value)<=2))sfEl.value=SUGGESTED.reps;
+      const distEl=document.getElementById('dist_'+r);if(distEl&&(!parseInt(distEl.value)||parseInt(distEl.value)<=1))distEl.value=Math.round(SUGGESTED.dist/50000);
+    });
+    const rdEl=document.getElementById('rdBudget');if(rdEl)rdEl.value=SUGGESTED.rd;
+  }
 }
 
 function loadBrandList(){
@@ -500,13 +552,15 @@ function loadBrandList(){
 function updatePricingTable(){
   if(!brands.length)return;
   const container=document.getElementById('pricingTable');
-  container.innerHTML=`<div class="region-grid" style="grid-template-columns:150px repeat(3,1fr)">
-    <div class="header">Brand</div><div class="header">LATAM</div><div class="header">Europe</div><div class="header">APAC</div>
+  const cols=ACTIVE_REGIONS.length;
+  container.innerHTML=`<div class="region-grid" style="grid-template-columns:150px repeat(${cols},1fr)">
+    <div class="header">Brand</div>${ACTIVE_REGIONS.map(r=>`<div class="header">${r}</div>`).join('')}
     ${brands.filter(b=>b.is_active).map(b=>`
-      <div>${esc(b.name)}</div>
-      ${REGIONS.map(r=>`<input type="number" id="price_${b.id}_${r}" value="${getDecisionPrice(b.id,r)}" min="200" max="3000" step="10" onchange="updateDecisions()">`).join('')}
+      <div>${esc(b.name)} <span style="font-size:.7rem;color:var(--muted)">($${Number(b.unit_cost||0).toLocaleString()} cost)</span></div>
+      ${ACTIVE_REGIONS.map(r=>`<input type="number" id="price_${b.id}_${r}" value="${getDecisionPrice(b.id,r)}" min="200" max="3000" step="10" onchange="updateDecisions()">`).join('')}
     `).join('')}
-  </div>`;
+  </div>
+  <p style="font-size:.75rem;color:var(--muted);margin-top:8px">💡 Suggested starting price: $${SUGGESTED.price}. Set price above your unit cost to make profit.</p>`;
 }
 
 function updateProductionTable(){
@@ -522,20 +576,20 @@ function updateProductionTable(){
   }</tbody></table>`;
 }
 
-function getDecisionPrice(brandId,region){return decisions?.pricing?.[brandId]?.[region]||900}
-function getDecisionProd(brandId){return decisions?.production?.[brandId]||500}
+function getDecisionPrice(brandId,region){return decisions?.pricing?.[brandId]?.[region]||SUGGESTED.price}
+function getDecisionProd(brandId){return decisions?.production?.[brandId]||SUGGESTED.prod}
 
 function collectDecisions(){
   const d={pricing:{},advertising:{},internet_marketing:{},salesforce:{},distribution:{},rd_budget:parseInt(document.getElementById('rdBudget').value)||0,production:{},dividend:parseInt(document.getElementById('dividend').value)||0};
   brands.filter(b=>b.is_active).forEach(b=>{
     d.pricing[b.id]={};d.production[b.id]=parseInt(document.getElementById('prod_'+b.id)?.value)||0;
-    REGIONS.forEach(r=>{d.pricing[b.id][r]=parseInt(document.getElementById(`price_${b.id}_${r}`)?.value)||900});
+    ACTIVE_REGIONS.forEach(r=>{d.pricing[b.id][r]=parseInt(document.getElementById(`price_${b.id}_${r}`)?.value)||SUGGESTED.price});
   });
-  d.advertising={latam:parseInt(document.getElementById('ad_latam').value)||0,europe:parseInt(document.getElementById('ad_europe').value)||0,apac:parseInt(document.getElementById('ad_apac').value)||0,target:document.getElementById('adTarget').value};
-  d.internet_marketing={latam:parseInt(document.getElementById('sem_latam').value)||0,europe:parseInt(document.getElementById('sem_europe').value)||0,apac:parseInt(document.getElementById('sem_apac').value)||0};
+  d.advertising={latam:parseInt(document.getElementById('ad_latam')?.value)||0,europe:parseInt(document.getElementById('ad_europe')?.value)||0,apac:parseInt(document.getElementById('ad_apac')?.value)||0,target:document.getElementById('adTarget')?.value||''};
+  d.internet_marketing={latam:parseInt(document.getElementById('sem_latam')?.value)||0,europe:parseInt(document.getElementById('sem_europe')?.value)||0,apac:parseInt(document.getElementById('sem_apac')?.value)||0};
   d.salesforce={};
-  REGIONS.forEach(r=>{const rl=r.toLowerCase();d.salesforce[rl]={count:parseInt(document.getElementById('sf_'+rl).value)||0,salary:parseInt(document.getElementById('sfsal_'+rl).value)||0,commission:parseInt(document.getElementById('sfcom_'+rl).value)||0}});
-  d.distribution={latam:parseInt(document.getElementById('dist_latam').value)||0,europe:parseInt(document.getElementById('dist_europe').value)||0,apac:parseInt(document.getElementById('dist_apac').value)||0};
+  ACTIVE_REGIONS.forEach(r=>{const rl=r.toLowerCase();d.salesforce[rl]={count:parseInt(document.getElementById('sf_'+rl)?.value)||0,salary:parseInt(document.getElementById('sfsal_'+rl)?.value)||0,commission:parseInt(document.getElementById('sfcom_'+rl)?.value)||0}});
+  d.distribution={latam:parseInt(document.getElementById('dist_latam')?.value)||0,europe:parseInt(document.getElementById('dist_europe')?.value)||0,apac:parseInt(document.getElementById('dist_apac')?.value)||0};
   return d;
 }
 
@@ -590,7 +644,19 @@ async function createBrand(){
   COMPONENTS.forEach(c=>components[c]=parseInt(document.getElementById('comp_'+c).value));
   const data=await apiFetch('/api/team/brands',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team?.id,name,target_segment:segment,components})});
   if(data.error)return alert(data.error);
-  brands.push(data.brand);
+  // Normalize brand properties (API returns camelCase, tables use snake_case)
+  const b=data.brand;
+  b.is_active=b.isActive!==undefined?b.isActive:true;
+  b.target_segment=b.targetSegment||b.target_segment;
+  b.overall_quality=b.overallQuality||b.overall_quality||0;
+  b.unit_cost=b.unitCost||b.unit_cost||0;
+  if(b.components){
+    b.frame_quality=b.components.frame;b.wheels_quality=b.components.wheels;
+    b.drivetrain_quality=b.components.drivetrain;b.brakes_quality=b.components.brakes;
+    b.suspension_quality=b.components.suspension;b.seat_quality=b.components.seat;
+    b.handlebars_quality=b.components.handlebars;b.electronics_quality=b.components.electronics;
+  }
+  brands.push(b);
   document.getElementById('brandName').value='';
   loadBrandList();
 }
@@ -606,7 +672,7 @@ async function loadDecisions(){
       if(decisions.advertising.target)document.getElementById('adTarget').value=decisions.advertising.target;
     }
     if(decisions.internet_marketing){['latam','europe','apac'].forEach(r=>{if(document.getElementById('sem_'+r))document.getElementById('sem_'+r).value=decisions.internet_marketing[r]||0})}
-    if(decisions.salesforce){REGIONS.forEach(r=>{const rl=r.toLowerCase();const sf=decisions.salesforce[rl]||{};if(document.getElementById('sf_'+rl)){document.getElementById('sf_'+rl).value=sf.count||0;document.getElementById('sfsal_'+rl).value=sf.salary||40000;document.getElementById('sfcom_'+rl).value=sf.commission||5}})}
+    if(decisions.salesforce){ACTIVE_REGIONS.forEach(r=>{const rl=r.toLowerCase();const sf=decisions.salesforce[rl]||{};if(document.getElementById('sf_'+rl)){document.getElementById('sf_'+rl).value=sf.count||0;document.getElementById('sfsal_'+rl).value=sf.salary||40000;document.getElementById('sfcom_'+rl).value=sf.commission||5}})}
     if(decisions.distribution){['latam','europe','apac'].forEach(r=>{if(document.getElementById('dist_'+r))document.getElementById('dist_'+r).value=decisions.distribution[r]||0})}
     if(decisions.rd_budget)document.getElementById('rdBudget').value=decisions.rd_budget;
     if(decisions.dividend)document.getElementById('dividend').value=decisions.dividend;

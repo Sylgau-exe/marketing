@@ -1,6 +1,6 @@
 // api/simulation/get-results.js
 import { requireAuth, cors } from '../../lib/auth.js';
-import { TeamMemberDB, ResultDB, GameDB } from '../../lib/db.js';
+import { ResultDB, GameDB } from '../../lib/db.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -14,14 +14,13 @@ export default async function handler(req, res) {
     const { game_id, team_id, quarter } = req.query;
     if (!team_id) return res.status(400).json({ error: 'Team ID required' });
 
-    const members = await TeamMemberDB.findByTeam(team_id);
-    const isTeamMember = members.some(m => m.user_id === decoded.userId);
-    let isInstructor = false;
+    // Verify ownership through game
     if (game_id) {
       const game = await GameDB.findById(game_id);
-      if (game && game.instructor_id === decoded.userId) isInstructor = true;
+      if (game && String(game.user_id) !== String(decoded.userId) && !decoded.isAdmin) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
-    if (!isTeamMember && !isInstructor) return res.status(403).json({ error: 'Access denied' });
 
     if (quarter !== undefined) {
       const result = await ResultDB.findByTeamAndQuarter(team_id, parseInt(quarter));
