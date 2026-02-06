@@ -110,8 +110,11 @@ async function apiFetch(url, opts = {}) {
   const token = localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
-  const res = await fetch(API + url, { ...opts, headers });
-  return res.json();
+  try {
+    const res = await fetch(API + url, { ...opts, headers });
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(e) { console.error('Non-JSON from ' + url + ':', text); return { error: 'Server error' }; }
+  } catch(e) { console.error('Network error for ' + url + ':', e); return { error: 'Network error' }; }
 }
 
 function logout() {

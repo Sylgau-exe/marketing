@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   is_instructor BOOLEAN DEFAULT false,
   google_id VARCHAR(255),
   auth_provider VARCHAR(50) DEFAULT 'email',
+  email_verified BOOLEAN DEFAULT false,
   reset_token VARCHAR(255),
   reset_token_expires TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -51,10 +51,10 @@ td{padding:8px 12px;border-bottom:1px solid rgba(30,41,59,.3)}
 </div>
 <script>
 const API=window.location.origin;
-async function apiFetch(url,opts={}){const token=localStorage.getItem('token');const headers={'Content-Type':'application/json'};if(token)headers['Authorization']='Bearer '+token;return(await fetch(API+url,{...opts,headers})).json()}
+async function apiFetch(url,opts={}){const token=localStorage.getItem('token');const headers={'Content-Type':'application/json'};if(token)headers['Authorization']='Bearer '+token;try{const res=await fetch(API+url,{...opts,headers});const text=await res.text();try{return JSON.parse(text)}catch(e){console.error('Non-JSON from '+url+':',text);return{error:'Server error'}}}catch(e){console.error('Network error:',e);return{error:'Network error'}}}
 async function init(){
   const auth=await apiFetch('/api/auth/me');
-  if(!auth.user||(!auth.user.is_admin&&!auth.user.is_instructor))return location.href='/dashboard.html';
+  if(!auth.user||(!auth.user.isAdmin&&!auth.user.isInstructor))return location.href='/dashboard.html';
   document.getElementById('userName').textContent=auth.user.name;
   const stats=await apiFetch('/api/admin/stats');
   if(stats.stats){const s=stats.stats;document.getElementById('stats').innerHTML=`
@@ -64,7 +64,7 @@ async function init(){
     <div class="stat"><div class="num">${s.total_teams||0}</div><div class="label">Teams</div></div>`}
   const users=await apiFetch('/api/admin/users');
   if(users.users)document.getElementById('usersTable').innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th></tr></thead><tbody>${
-    users.users.map(u=>`<tr><td>${u.name}</td><td>${u.email}</td><td>${u.is_admin?'Admin':u.is_instructor?'Instructor':'Student'}</td><td>${new Date(u.created_at).toLocaleDateString()}</td></tr>`).join('')
+    users.users.map(u=>`<tr><td>${u.name}</td><td>${u.email}</td><td>${u.isAdmin?'Admin':u.isInstructor?'Instructor':'Student'}</td><td>${new Date(u.joined||u.created_at||'').toLocaleDateString()}</td></tr>`).join('')
   }</tbody></table>`;
 }
 init();
