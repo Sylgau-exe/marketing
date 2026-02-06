@@ -102,7 +102,8 @@ export default async function handler(req, res) {
         drivetrain_quality: b.drivetrain_quality, brakes_quality: b.brakes_quality,
         suspension_quality: b.suspension_quality, seat_quality: b.seat_quality,
         handlebars_quality: b.handlebars_quality, electronics_quality: b.electronics_quality,
-        overall_quality: b.overall_quality, unit_cost: b.unit_cost
+        overall_quality: b.overall_quality, unit_cost: b.unit_cost,
+        is_active: true, status: 'active'
       })),
       segments, competitors, leaderboard,
       latestResults: latestResults ? {
