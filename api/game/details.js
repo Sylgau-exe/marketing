@@ -88,7 +88,7 @@ export default async function handler(req, res) {
     res.json({
       game: {
         id: game.id, name: game.name, status: game.status,
-        current_quarter: game.current_quarter, settings: game.settings
+        current_quarter: game.current_quarter, market_scenario: game.market_scenario, settings: game.settings
       },
       team: {
         id: playerTeam.id, name: playerTeam.name,
