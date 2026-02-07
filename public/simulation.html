@@ -668,7 +668,7 @@ async function submitDecisions(){
       if(Array.isArray(data._debug.engineFactors)){
         factors=data._debug.engineFactors.map(function(f){
           if(f.skip) return '<div style="color:#f87171">'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' SKIP dist='+f.distRaw+'</div>';
-          return '<div>'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' bf='+(f.brandFitScore||0).toFixed(3)+' pr='+(f.priceAttractiveness||0).toFixed(2)+' ad='+(f.adReach||0).toFixed(2)+' sf='+(f.salesEffectiveness||0).toFixed(2)+' di='+(f.distributionCoverage||0).toFixed(2)+' pull='+(f.pull||0).toFixed(5)+' dec='+f.decFound+'/'+f.decFoundStr+'</div>';
+          return '<div>'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' bf='+(f.brandFitScore||0).toFixed(3)+' pr='+(f.priceAttractiveness||0).toFixed(2)+' (p='+f.priceUsed+' min='+f.segMinPrice+' max='+f.segMaxPrice+') ad='+(f.adReach||0).toFixed(2)+' sf='+(f.salesEffectiveness||0).toFixed(2)+' di='+(f.distributionCoverage||0).toFixed(2)+' pull='+(f.pull||0).toFixed(5)+'</div>';
         }).join('');
       }
       debugHtml='<details style="margin-top:12px;font-size:.7rem;color:#94a3b8"><summary style="cursor:pointer;font-weight:600">Debug v3</summary>'+
