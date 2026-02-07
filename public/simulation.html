@@ -669,7 +669,7 @@ async function submitDecisions(){
       '🏆 Scorecard: '+(parseFloat(r.balancedScorecard||0)).toFixed(2)+'\n'+
       '🥇 Rank: #'+rank+' of '+(data.leaderboard?.length||1)+'\n\n'+
       (data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+
-      '\n\n--- DEBUG (v2) ---'+
+      '\n\n--- DEBUG (v3) ---'+
       '\nHas _debug: '+(!!data._debug)+
       (data._debug?
         '\nBrands: '+JSON.stringify(data._debug.brandNames)+
@@ -678,8 +678,10 @@ async function submitDecisions(){
         '\nPricing: '+JSON.stringify(data._debug.normalizedPricing)+
         '\nDistrib: '+JSON.stringify(data._debug.normalizedDistribution)+
         '\nDemand: '+data._debug.playerDemand+
-        '\nRevenue: '+data._debug.playerRevenue
-        :'\nNo debug data - old code still deployed?'));
+        '\nRevenue: '+data._debug.playerRevenue+
+        '\n\n--- ENGINE FACTORS ---'+
+        '\n'+(Array.isArray(data._debug.engineFactors)?data._debug.engineFactors.map(function(f){return f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+(f.skip?' SKIP dist='+f.distRaw:' bf='+(f.brandFitScore||0).toFixed(3)+' pr='+(f.priceAttractiveness||0).toFixed(2)+' ad='+(f.adReach||0).toFixed(2)+' sf='+(f.salesEffectiveness||0).toFixed(2)+' di='+(f.distributionCoverage||0).toFixed(2)+' pull='+(f.pull||0).toFixed(5)+' decFound='+f.decFound+'/'+f.decFoundStr)}).join('\n'):'no factors')
+        :'\nNo debug data - old code?'));
   }
   // Reload to show new quarter
   location.reload();

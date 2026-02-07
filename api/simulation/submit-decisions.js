@@ -156,6 +156,7 @@ export default async function handler(req, res) {
       playerResultExists: !!playerResult,
       playerDemand: playerResult?.totalDemand,
       playerRevenue: playerResult?.revenue,
+      engineFactors: engineResult._engineDebug?.slice(0, 20) || 'none',
     };
     console.log('ENGINE DEBUG:', JSON.stringify(debugInfo, null, 2));
     for (const t of teams) {
