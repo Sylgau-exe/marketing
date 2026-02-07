@@ -644,7 +644,6 @@ async function saveDecisions(){
 }
 
 async function submitDecisions(){
-  if(!confirm('Submit your decisions for Q'+(game.current_quarter||1)+'? The quarter will process immediately.'))return;
   decisions=collectDecisions();
   var btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='⏳ Processing...';
