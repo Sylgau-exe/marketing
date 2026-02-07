@@ -31,14 +31,14 @@ export default async function handler(req, res) {
         isAi: !!team.is_ai,
         quarters: allResults.map(r => ({
           quarter: r.quarter,
-          revenue: parseFloat(r.revenue || r.total_revenue || 0),
+          revenue: parseFloat(r.total_revenue || r.revenue || 0),
           netIncome: parseFloat(r.net_income || 0),
-          balancedScorecard: r.balanced_scorecard
+          balancedScorecard: parseFloat(r.balanced_scorecard || 0)
         })),
-        currentScorecard: latest ? latest.balanced_scorecard : 0,
-        cumulative_scorecard: latest ? (latest.cumulative_scorecard || latest.balanced_scorecard) : 0,
-        balanced_scorecard: latest ? latest.balanced_scorecard : 0,
-        totalRevenue: allResults.reduce((s, r) => s + parseFloat(r.revenue || r.total_revenue || 0), 0),
+        currentScorecard: latest ? parseFloat(latest.balanced_scorecard || 0) : 0,
+        cumulative_scorecard: latest ? parseFloat(latest.cumulative_scorecard || latest.balanced_scorecard || 0) : 0,
+        balanced_scorecard: latest ? parseFloat(latest.balanced_scorecard || 0) : 0,
+        totalRevenue: allResults.reduce((s, r) => s + parseFloat(r.total_revenue || r.revenue || 0), 0),
         totalProfit: allResults.reduce((s, r) => s + parseFloat(r.net_income || 0), 0)
       });
     }

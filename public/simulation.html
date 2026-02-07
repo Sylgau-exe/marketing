@@ -526,6 +526,12 @@ async function init(){
   loadResults();
   loadLeaderboard();
   loadResearch();
+
+  // Auto-expand reports section when results are available
+  if(game.current_quarter>=2){
+    document.getElementById('reportsMenu').style.display='block';
+    document.getElementById('reportsArrow').style.transform='rotate(180deg)';
+  }
 }
 
 function setupScenarioDefaults(){
@@ -855,13 +861,53 @@ async function loadResearch(){
   const data=await apiFetch(`/api/simulation/market-research?game_id=${gameId}&quarter=${game.current_quarter-1}`);
   if(!data.research)return;
   const r=data.research;
-  document.getElementById('researchContent').innerHTML=`
-    <div class="panel"><h3>Segment Demand — Q${game.current_quarter-1}</h3>
-      <p style="color:var(--muted);font-size:.85rem">${JSON.stringify(r.segment_demands||{},null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;')}</p>
-    </div>
-    <div class="panel"><h3>Market Trends</h3>
-      <p style="color:var(--muted);font-size:.85rem">${JSON.stringify(r.market_trends||{},null,2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;')}</p>
-    </div>`;
+
+  // Build segment demand table
+  const segments=r.segmentDemands||{};
+  const segNames=Object.keys(segments);
+  let demandHtml='';
+  if(segNames.length>0){
+    const regions=Object.keys(segments[segNames[0]]||{});
+    demandHtml='<table><thead><tr><th>Segment</th>'+regions.map(rg=>'<th style="text-align:right">'+rg.charAt(0).toUpperCase()+rg.slice(1)+'</th>').join('')+'<th style="text-align:right">Total</th></tr></thead><tbody>';
+    for(const seg of segNames){
+      const vals=segments[seg]||{};
+      const total=Object.values(vals).reduce((s,v)=>s+(parseInt(v)||0),0);
+      demandHtml+='<tr><td>'+esc(seg)+'</td>'+regions.map(rg=>'<td style="text-align:right">'+Number(vals[rg]||0).toLocaleString()+'</td>').join('')+'<td style="text-align:right;font-weight:600">'+total.toLocaleString()+'</td></tr>';
+    }
+    demandHtml+='</tbody></table>';
+  }else{
+    demandHtml='<p style="color:var(--muted)">No segment demand data available yet.</p>';
+  }
+
+  // Build market trends
+  const trends=r.marketTrends||{};
+  let trendsHtml='<table><tbody>';
+  if(trends.totalIndustryDemand!==undefined) trendsHtml+='<tr><td>Total Industry Demand</td><td style="text-align:right">'+Number(trends.totalIndustryDemand||0).toLocaleString()+' units</td></tr>';
+  if(trends.averagePrice!==undefined) trendsHtml+='<tr><td>Average Industry Price</td><td style="text-align:right">$'+Number(Math.round(trends.averagePrice||0)).toLocaleString()+'</td></tr>';
+  if(trends.growthRate!==undefined) trendsHtml+='<tr><td>Market Growth Rate</td><td style="text-align:right">'+(parseFloat(trends.growthRate||0)*100).toFixed(1)+'%</td></tr>';
+  trendsHtml+='<tr><td>Quarter</td><td style="text-align:right">Q'+(trends.quarter||game.current_quarter-1)+'</td></tr>';
+  trendsHtml+='</tbody></table>';
+
+  // Build competitor insights
+  const competitors=r.competitorPrices||{};
+  const judgments=r.brandJudgments||{};
+  let compHtml='';
+  const compNames=Object.keys(competitors);
+  if(compNames.length>0){
+    compHtml='<table><thead><tr><th>Company</th><th style="text-align:right">Pricing</th><th style="text-align:right">Brand Score</th><th style="text-align:right">Satisfaction</th></tr></thead><tbody>';
+    for(const name of compNames){
+      const prices=competitors[name]||{};
+      const priceStr=Object.values(prices).filter(v=>typeof v==='number'||!isNaN(v)).map(v=>'$'+Number(v).toLocaleString()).join(', ')||'N/A';
+      const j=judgments[name]||{};
+      compHtml+='<tr><td>'+esc(name)+'</td><td style="text-align:right">'+priceStr+'</td><td style="text-align:right">'+(parseFloat(j.brandSatisfaction||0)*100).toFixed(0)+'%</td><td style="text-align:right">'+(parseFloat(j.overallSatisfaction||0)*100).toFixed(0)+'%</td></tr>';
+    }
+    compHtml+='</tbody></table>';
+  }
+
+  document.getElementById('researchContent').innerHTML=
+    '<div class="panel"><h3>📊 Segment Demand — Q'+(game.current_quarter-1)+'</h3>'+demandHtml+'</div>'+
+    '<div class="panel"><h3>📈 Market Trends</h3>'+trendsHtml+'</div>'+
+    (compHtml?'<div class="panel"><h3>🏢 Competitor Intelligence</h3>'+compHtml+'</div>':'');
 }
 
 function N(v){return Number(v||0).toLocaleString()}
