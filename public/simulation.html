@@ -661,26 +661,49 @@ async function submitDecisions(){
   if(r){
     var rank=1;
     if(data.leaderboard){data.leaderboard.forEach(function(t,i){if(t.isPlayer)rank=i+1});}
-    alert('✅ Q'+(data.quarterProcessed)+' Results!\n\n'+
-      '💰 Revenue: $'+Number(r.revenue||0).toLocaleString()+'\n'+
-      '📊 Net Income: $'+Number(r.netIncome||0).toLocaleString()+'\n'+
-      '📈 Market Share: '+(parseFloat(r.marketShare||0)*100).toFixed(1)+'%\n'+
-      '🏆 Scorecard: '+(parseFloat(r.balancedScorecard||0)).toFixed(2)+'\n'+
-      '🥇 Rank: #'+rank+' of '+(data.leaderboard?.length||1)+'\n\n'+
-      (data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+
-      '\n\n--- DEBUG (v3) ---'+
-      '\nHas _debug: '+(!!data._debug)+
-      (data._debug?
-        '\nBrands: '+JSON.stringify(data._debug.brandNames)+
-        '\nTargets: '+JSON.stringify(data._debug.brandTargets)+
-        '\nSegments: '+JSON.stringify(data._debug.segmentNames)+
-        '\nPricing: '+JSON.stringify(data._debug.normalizedPricing)+
-        '\nDistrib: '+JSON.stringify(data._debug.normalizedDistribution)+
-        '\nDemand: '+data._debug.playerDemand+
-        '\nRevenue: '+data._debug.playerRevenue+
-        '\n\n--- ENGINE FACTORS ---'+
-        '\n'+(Array.isArray(data._debug.engineFactors)?data._debug.engineFactors.map(function(f){return f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+(f.skip?' SKIP dist='+f.distRaw:' bf='+(f.brandFitScore||0).toFixed(3)+' pr='+(f.priceAttractiveness||0).toFixed(2)+' ad='+(f.adReach||0).toFixed(2)+' sf='+(f.salesEffectiveness||0).toFixed(2)+' di='+(f.distributionCoverage||0).toFixed(2)+' pull='+(f.pull||0).toFixed(5)+' decFound='+f.decFound+'/'+f.decFoundStr)}).join('\n'):'no factors')
-        :'\nNo debug data - old code?'));
+    
+    var debugHtml='';
+    if(data._debug){
+      var factors='';
+      if(Array.isArray(data._debug.engineFactors)){
+        factors=data._debug.engineFactors.map(function(f){
+          if(f.skip) return '<div style="color:#f87171">'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' SKIP dist='+f.distRaw+'</div>';
+          return '<div>'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' bf='+(f.brandFitScore||0).toFixed(3)+' pr='+(f.priceAttractiveness||0).toFixed(2)+' ad='+(f.adReach||0).toFixed(2)+' sf='+(f.salesEffectiveness||0).toFixed(2)+' di='+(f.distributionCoverage||0).toFixed(2)+' pull='+(f.pull||0).toFixed(5)+' dec='+f.decFound+'/'+f.decFoundStr+'</div>';
+        }).join('');
+      }
+      debugHtml='<details style="margin-top:12px;font-size:.7rem;color:#94a3b8"><summary style="cursor:pointer;font-weight:600">Debug v3</summary>'+
+        '<div style="margin-top:6px;font-family:monospace;white-space:pre-wrap;max-height:300px;overflow:auto;background:#0f172a;padding:8px;border-radius:6px">'+
+        'Brands: '+JSON.stringify(data._debug.brandNames)+'\n'+
+        'Targets: '+JSON.stringify(data._debug.brandTargets)+'\n'+
+        'Segments: '+JSON.stringify(data._debug.segmentNames)+'\n'+
+        'Pricing: '+JSON.stringify(data._debug.normalizedPricing)+'\n'+
+        'Distrib: '+JSON.stringify(data._debug.normalizedDistribution)+'\n'+
+        'Demand: '+data._debug.playerDemand+'\n'+
+        'Revenue: '+data._debug.playerRevenue+'\n\n'+
+        '--- ENGINE FACTORS ---\n'+factors+
+        '</div></details>';
+    }
+
+    // Show in-page modal (can't be suppressed by browser)
+    var modal=document.createElement('div');
+    modal.id='resultsModal';
+    modal.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7)';
+    modal.innerHTML='<div style="background:#1e293b;border-radius:16px;padding:28px;max-width:550px;width:90%;max-height:85vh;overflow:auto;color:#e2e8f0;box-shadow:0 20px 40px rgba(0,0,0,.5)">'+
+      '<h2 style="margin:0 0 16px;color:#34d399">✅ Q'+(data.quarterProcessed)+' Results</h2>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Revenue</div><div style="font-size:1.3rem;font-weight:700">$'+Number(r.revenue||0).toLocaleString()+'</div></div>'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Net Income</div><div style="font-size:1.3rem;font-weight:700">$'+Number(r.netIncome||0).toLocaleString()+'</div></div>'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Market Share</div><div style="font-size:1.3rem;font-weight:700">'+(parseFloat(r.marketShare||0)*100).toFixed(1)+'%</div></div>'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Scorecard</div><div style="font-size:1.3rem;font-weight:700">'+(parseFloat(r.balancedScorecard||0)).toFixed(2)+'</div></div>'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Demand</div><div style="font-size:1.3rem;font-weight:700">'+Number(r.demand||0).toLocaleString()+'</div></div>'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Rank</div><div style="font-size:1.3rem;font-weight:700">#'+rank+' of '+(data.leaderboard?.length||1)+'</div></div>'+
+      '</div>'+
+      '<p style="text-align:center;color:#94a3b8;margin:0 0 12px">'+(data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+'</p>'+
+      debugHtml+
+      '<button onclick="document.getElementById(\'resultsModal\').remove();location.reload()" style="display:block;width:100%;padding:12px;margin-top:16px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer">Continue →</button>'+
+    '</div>';
+    document.body.appendChild(modal);
+    return; // Don't reload until user clicks Continue
   }
   // Reload to show new quarter
   location.reload();
