@@ -84,6 +84,15 @@ export default async function handler(req, res) {
 
     // ===== SUBMIT: Process the quarter =====
 
+    // Guard against double-submit: check if this quarter was already processed
+    try {
+      const existingResult = await ResultDB.findByTeamAndQuarter(team_id, game.current_quarter);
+      if (existingResult) {
+        console.warn(`Quarter ${game.current_quarter} already processed for team ${team_id}, skipping re-process`);
+        return res.json({ success: true, saved: true, submitted: true, quarterProcessed: game.current_quarter, alreadyProcessed: true });
+      }
+    } catch(e) {}
+
     // Increment decisions_used counter
     try {
       await sql`UPDATE users SET decisions_used = COALESCE(decisions_used, 0) + 1 WHERE id = ${decoded.userId}`;
@@ -91,6 +100,10 @@ export default async function handler(req, res) {
 
     // Get segments and normalize field names for engine
     const rawSegments = await SegmentDB.getForGame(game_id);
+    if (!rawSegments || rawSegments.length === 0) {
+      console.error(`⚠️ CRITICAL: No segments found for game ${game_id}! Cannot process quarter.`);
+      return res.status(500).json({ error: 'Simulation data error — no market segments found. Please try again.' });
+    }
     const segments = rawSegments.map(normalizeSegment);
 
     // Build engine state for all teams
@@ -125,6 +138,14 @@ export default async function handler(req, res) {
     }
 
     // Process quarter
+    console.log(`Processing Q${game.current_quarter} for game ${game_id}:`, {
+      teamsCount: engineTeams.length,
+      segmentsCount: segments.length,
+      segmentNames: segments.map(s => s.name),
+      decisionKeys: Object.keys(decisionsMap),
+      playerDistribution: decisionsMap[team_id]?.distribution || decisionsMap[String(team_id)]?.distribution || 'NOT FOUND'
+    });
+
     const engineResult = processQuarter({
       quarter: game.current_quarter,
       teams: engineTeams,
@@ -134,6 +155,21 @@ export default async function handler(req, res) {
 
     // Save results for all teams
     const playerResult = engineResult.results[team_id];
+    
+    // Diagnostic: log if player got zero demand (likely engine issue)
+    if (playerResult && playerResult.totalDemand === 0 && game.current_quarter > 1) {
+      console.warn(`⚠️ Q${game.current_quarter} ZERO DEMAND for player team ${team_id}`, {
+        revenue: playerResult.revenue,
+        netIncome: playerResult.netIncome,
+        endingCash: playerResult.endingCash,
+        segmentCount: segments.length,
+        playerDecisionKeys: Object.keys(decisionsMap[team_id] || decisionsMap[String(team_id)] || {}),
+        playerDist: (decisionsMap[team_id] || decisionsMap[String(team_id)] || {}).distribution,
+        playerPricing: (decisionsMap[team_id] || decisionsMap[String(team_id)] || {}).pricing,
+        allTeamDemands: Object.entries(engineResult.results).map(([id, r]) => ({ id, demand: r.totalDemand, revenue: r.revenue })),
+        debugSample: (engineResult._engineDebug || []).slice(0, 10)
+      });
+    }
     
     for (const t of teams) {
       const tr = engineResult.results[t.id];
@@ -188,7 +224,15 @@ export default async function handler(req, res) {
         overallSatisfaction: playerResult.overallSatisfaction
       } : null,
       leaderboard,
-      warnings: errors.filter(e => e.severity === 'warning')
+      warnings: errors.filter(e => e.severity === 'warning'),
+      _debug: decoded.isAdmin ? {
+        segmentCount: segments.length,
+        teamsCount: engineTeams.length,
+        decisionKeysTypes: Object.entries(decisionsMap).map(([k,v]) => ({ key: k, type: typeof k, hasDist: !!v.distribution, distKeys: Object.keys(v.distribution || {}) })),
+        engineDebugCount: (engineResult._engineDebug || []).length,
+        engineDebugSample: (engineResult._engineDebug || []).filter(e => e.region === 'latam').slice(0, 6),
+        allTeamResults: Object.entries(engineResult.results).map(([id, r]) => ({ id, demand: r.totalDemand, revenue: r.revenue, netIncome: r.netIncome }))
+      } : undefined
     });
   } catch (error) {
     console.error('Submit decisions error:', error);

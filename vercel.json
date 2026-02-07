@@ -26,6 +26,7 @@
     { "source": "/api/team/members", "destination": "/api/team/members.js" },
     { "source": "/api/checkout/create-session", "destination": "/api/checkout/create-session.js" },
     { "source": "/api/checkout/portal", "destination": "/api/checkout/portal.js" },
-    { "source": "/api/webhooks/stripe", "destination": "/api/webhooks/stripe.js" }
+    { "source": "/api/webhooks/stripe", "destination": "/api/webhooks/stripe.js" },
+    { "source": "/api/ai/advisor", "destination": "/api/ai/advisor.js" }
   ]
 }

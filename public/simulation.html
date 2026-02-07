@@ -103,6 +103,17 @@ tr:hover td{background:rgba(59,130,246,.03)}
 /* Paywall modal */
 .paywall-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;animation:pwFadeIn .3s ease}
 @keyframes pwFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.advisor-section{margin-bottom:20px;padding:16px;background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:10px}
+.advisor-section h4{margin:0 0 8px;color:#818cf8;font-size:.9rem}
+.advisor-section p,.advisor-section li{color:var(--text-secondary);font-size:.88rem;line-height:1.6}
+.advisor-section ul{margin:4px 0 0 0;padding-left:18px}
+.advisor-section li{margin-bottom:4px}
+.advisor-highlight{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.2)}
+.advisor-highlight h4{color:#34d399}
+.advisor-warning{background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.15)}
+.advisor-warning h4{color:#f87171}
+.advisor-meta{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)}
 .paywall-box{background:#fff;border-radius:24px;max-width:460px;width:90%;overflow:hidden;animation:pwSlideUp .3s ease;box-shadow:0 25px 50px rgba(0,0,0,.25)}
 @keyframes pwSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .paywall-header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:32px;text-align:center}
@@ -171,6 +182,7 @@ tr:hover td{background:rgba(59,130,246,.03)}
         <div class="sidebar-item" data-tab="financials"><span>💰</span><span>Financials</span></div>
         <div class="sidebar-item" data-tab="research"><span>🔍</span><span>Market Research</span></div>
         <div class="sidebar-item" data-tab="leaderboard"><span>🏆</span><span>Rankings vs AI</span></div>
+        <div class="sidebar-item" data-tab="advisor"><span>🧠</span><span>AI Advisor</span></div>
       </div>
     </div>
     <div class="sidebar-footer">
@@ -350,6 +362,24 @@ tr:hover td{background:rgba(59,130,246,.03)}
       <div id="leaderboardContent"><p style="color:var(--muted)">Rankings will appear after your first quarter is processed.</p></div>
     </div>
 
+    <!-- AI ADVISOR TAB -->
+    <div class="tab-content" id="tab-advisor">
+      <h2>🧠 AI Strategy Advisor</h2>
+      <div class="panel" id="advisorPanel">
+        <div style="text-align:center;padding:20px" id="advisorEmpty">
+          <div style="font-size:3rem;margin-bottom:12px">🧠</div>
+          <h3 style="margin:0 0 8px">Your Personal Strategy Advisor</h3>
+          <p style="color:var(--muted);font-size:.9rem;margin:0 0 20px;max-width:450px;margin-left:auto;margin-right:auto">Get AI-powered analysis of your performance, competitive position, and actionable recommendations for your next quarter.</p>
+          <button class="btn btn-primary" onclick="getAdvisorAnalysis()" id="advisorBtn" style="font-size:1rem;padding:10px 28px">📊 Analyze My Performance</button>
+        </div>
+        <div id="advisorContent" style="display:none"></div>
+        <div id="advisorLoading" style="display:none;text-align:center;padding:40px">
+          <div style="font-size:2rem;margin-bottom:12px;animation:pulse 1.5s infinite">🧠</div>
+          <p style="color:var(--muted)">Analyzing your strategy and market position...</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -467,7 +497,7 @@ document.querySelectorAll('.sidebar-item').forEach(item=>{
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
     document.getElementById('tab-'+item.dataset.tab).classList.add('active');
     // Auto-expand reports if a report tab is activated
-    const reportTabs=['results','financials','research','leaderboard'];
+    const reportTabs=['results','financials','research','leaderboard','advisor'];
     if(reportTabs.includes(item.dataset.tab)){
       document.getElementById('reportsMenu').style.display='block';
       document.getElementById('reportsArrow').style.transform='rotate(180deg)';
@@ -509,7 +539,8 @@ async function init(){
   });
 
   document.getElementById('gameName').textContent=game.name||'Simulation';
-  document.getElementById('quarterBadge').textContent='Q'+game.current_quarter;
+  document.getElementById('quarterBadge').textContent=game.status==='completed'?'Complete':'Q'+game.current_quarter;
+  if(game.status==='completed')document.getElementById('quarterBadge').style.background='#10b981';
   document.getElementById('submitQ').textContent=game.current_quarter||1;
   if(team){
     document.getElementById('teamName').textContent=(team.logo_emoji||'🏢')+' '+(team.name||'My Company');
@@ -520,7 +551,7 @@ async function init(){
 
   initSliders();
   updateEstCost();
-  loadDecisions();
+  await loadDecisions();
   loadBrandList();
   setupScenarioDefaults();
   loadResults();
@@ -532,6 +563,284 @@ async function init(){
     document.getElementById('reportsMenu').style.display='block';
     document.getElementById('reportsArrow').style.transform='rotate(180deg)';
   }
+
+  // If game is completed, show the final summary screen
+  if(game.status==='completed'){
+    showGameSummary();
+  }
+}
+
+async function showGameSummary(){
+  // Hide the sidebar submit button and decision tabs
+  const submitBtn=document.getElementById('submitBtn');
+  if(submitBtn)submitBtn.style.display='none';
+
+  // Fetch all quarterly results
+  const allData=await apiFetch(`/api/simulation/get-results?game_id=${gameId}&team_id=${team.id}`);
+  const history=(allData.results||[]).sort((a,b)=>a.quarter-b.quarter);
+
+  // Fetch leaderboard
+  const lbData=await apiFetch(`/api/simulation/leaderboard?game_id=${gameId}`);
+  const leaderboard=lbData.leaderboard||[];
+
+  // Find player rank
+  let playerRank=1,playerTeamData=null;
+  leaderboard.forEach((t,i)=>{if(t.isPlayer){playerRank=i+1;playerTeamData=t;}});
+
+  // Calculate cumulative stats
+  const totalRevenue=history.reduce((s,r)=>s+(r.revenue||0),0);
+  const totalProfit=history.reduce((s,r)=>s+(r.netIncome||0),0);
+  const totalUnitsSold=history.reduce((s,r)=>s+(r.unitsSold||0),0);
+  const endingCash=history.length>0?history[history.length-1].endingCash:0;
+  const bestQuarter=history.reduce((best,r)=>(!best||r.revenue>best.revenue)?r:best,null);
+  const worstQuarter=history.reduce((worst,r)=>(!worst||r.netIncome<worst.netIncome)?r:worst,null);
+  const avgScorecard=history.length>0?(history.reduce((s,r)=>s+(r.scorecard?.balanced||0),0)/history.length):0;
+  const peakMarketShare=Math.max(...history.map(r=>r.marketShare||0));
+
+  // Rank label
+  const rankEmoji=playerRank===1?'🥇':playerRank===2?'🥈':playerRank===3?'🥉':'🏅';
+  const rankLabel=playerRank===1?'Champion':playerRank===2?'Runner-Up':playerRank===3?'Third Place':'Participant';
+
+  // Build sparkline data for mini charts
+  const revData=history.map(r=>r.revenue||0);
+  const shareData=history.map(r=>(r.marketShare||0)*100);
+  const scoreData=history.map(r=>r.scorecard?.balanced||0);
+  const cashData=history.map(r=>r.endingCash||0);
+
+  function miniChart(data,color,height){
+    if(!data.length)return '';
+    const max=Math.max(...data,1);const min=Math.min(...data,0);
+    const range=max-min||1;const w=200;const h=height||40;
+    const points=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-min)/range)*h}`).join(' ');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block"><polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
+  // Replace main content with summary
+  const mainContent=document.getElementById('mainContent');
+  mainContent.innerHTML=`
+    <div style="max-width:900px;margin:0 auto;padding:20px 0">
+      
+      <!-- Hero Banner -->
+      <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.1));border-radius:16px;border:1px solid rgba(99,102,241,.15);margin-bottom:24px">
+        <div style="font-size:3rem;margin-bottom:8px">${rankEmoji}</div>
+        <h1 style="margin:0 0 4px;font-size:1.8rem;color:var(--text)">Simulation Complete!</h1>
+        <p style="margin:0 0 16px;color:var(--muted);font-size:1rem">${game.name||'MarketSim'} — 8 Quarters</p>
+        <div style="display:inline-block;background:${playerRank===1?'rgba(52,211,153,.15)':playerRank===2?'rgba(59,130,246,.15)':'rgba(251,191,36,.15)'};padding:8px 24px;border-radius:99px;font-size:1.1rem;font-weight:700;color:${playerRank===1?'#34d399':playerRank===2?'#60a5fa':'#fbbf24'}">
+          ${rankLabel} — #${playerRank} of ${leaderboard.length}
+        </div>
+      </div>
+
+      <!-- Key Metrics Grid -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div class="panel" style="text-align:center;padding:16px">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total Revenue</div>
+          <div style="font-size:1.4rem;font-weight:700;color:var(--green);margin:4px 0">$${Number(totalRevenue).toLocaleString()}</div>
+          ${miniChart(revData,'#34d399',30)}
+        </div>
+        <div class="panel" style="text-align:center;padding:16px">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total Profit</div>
+          <div style="font-size:1.4rem;font-weight:700;color:${totalProfit>=0?'var(--green)':'var(--red)'};margin:4px 0">$${Number(totalProfit).toLocaleString()}</div>
+          <div style="font-size:.75rem;color:var(--muted)">Ending Cash: $${Number(endingCash).toLocaleString()}</div>
+        </div>
+        <div class="panel" style="text-align:center;padding:16px">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Peak Market Share</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#60a5fa;margin:4px 0">${peakMarketShare.toFixed(1)}%</div>
+          ${miniChart(shareData,'#60a5fa',30)}
+        </div>
+        <div class="panel" style="text-align:center;padding:16px">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Avg Scorecard</div>
+          <div style="font-size:1.4rem;font-weight:700;color:#a78bfa;margin:4px 0">${avgScorecard.toFixed(2)}</div>
+          ${miniChart(scoreData,'#a78bfa',30)}
+        </div>
+      </div>
+
+      <!-- Quarterly Performance Table -->
+      <div class="panel" style="margin-bottom:24px">
+        <h3 style="margin:0 0 12px">📈 Quarter-by-Quarter Performance</h3>
+        <div style="overflow-x:auto">
+          <table style="width:100%">
+            <thead><tr>
+              <th>Quarter</th><th style="text-align:right">Revenue</th><th style="text-align:right">Net Income</th>
+              <th style="text-align:right">Units</th><th style="text-align:right">Market Share</th>
+              <th style="text-align:right">Cash</th><th style="text-align:right">Scorecard</th>
+            </tr></thead>
+            <tbody>
+              ${history.map(r=>`<tr>
+                <td><strong>Q${r.quarter}</strong></td>
+                <td style="text-align:right">$${Number(r.revenue||0).toLocaleString()}</td>
+                <td style="text-align:right;color:${(r.netIncome||0)>=0?'var(--green)':'var(--red)'}">$${Number(r.netIncome||0).toLocaleString()}</td>
+                <td style="text-align:right">${Number(r.unitsSold||0).toLocaleString()}</td>
+                <td style="text-align:right">${((r.marketShare||0)*100).toFixed(1)}%</td>
+                <td style="text-align:right">$${Number(r.endingCash||0).toLocaleString()}</td>
+                <td style="text-align:right;font-weight:600">${(r.scorecard?.balanced||0).toFixed(2)}</td>
+              </tr>`).join('')}
+            </tbody>
+            <tfoot><tr style="font-weight:700;border-top:2px solid var(--border)">
+              <td>TOTAL</td>
+              <td style="text-align:right">$${Number(totalRevenue).toLocaleString()}</td>
+              <td style="text-align:right;color:${totalProfit>=0?'var(--green)':'var(--red)'}">$${Number(totalProfit).toLocaleString()}</td>
+              <td style="text-align:right">${Number(totalUnitsSold).toLocaleString()}</td>
+              <td style="text-align:right">${peakMarketShare.toFixed(1)}% peak</td>
+              <td style="text-align:right">$${Number(endingCash).toLocaleString()}</td>
+              <td style="text-align:right">${avgScorecard.toFixed(2)} avg</td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Final Leaderboard -->
+      <div class="panel" style="margin-bottom:24px">
+        <h3 style="margin:0 0 12px">🏆 Final Standings</h3>
+        ${leaderboard.map((t,i)=>{
+          const isYou=t.isPlayer;
+          const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+          return `<div style="display:flex;align-items:center;padding:12px 16px;margin-bottom:8px;border-radius:10px;${isYou?'background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25)':'background:rgba(255,255,255,.02);border:1px solid var(--border)'}">
+            <div style="font-size:1.2rem;font-weight:700;width:40px;color:${i===0?'#fbbf24':i===1?'#94a3b8':i===2?'#cd7f32':'var(--muted)'}">#${i+1}</div>
+            <div style="flex:1">
+              <div style="font-weight:600">${medal} ${esc(t.name)} ${isYou?'<span style="color:var(--primary);font-size:.75rem;font-weight:400">YOU</span>':'<span style="color:var(--muted);font-size:.75rem">🤖 AI</span>'}</div>
+              <div style="font-size:.75rem;color:var(--muted);margin-top:2px">Revenue: $${Number(t.totalRevenue||0).toLocaleString()} · Profit: $${Number(t.totalProfit||0).toLocaleString()}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:1.2rem;font-weight:700;color:${i===0?'#fbbf24':'var(--text)'}">${parseFloat(t.cumulative_scorecard||0).toFixed(2)}</div>
+              <div style="font-size:.7rem;color:var(--muted)">scorecard</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Highlights -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+        <div class="panel" style="padding:16px">
+          <h4 style="margin:0 0 8px;font-size:.85rem;color:var(--green)">📈 Best Quarter</h4>
+          ${bestQuarter?`<div style="font-size:1.1rem;font-weight:700">Q${bestQuarter.quarter}</div>
+          <div style="font-size:.8rem;color:var(--muted)">Revenue: $${Number(bestQuarter.revenue||0).toLocaleString()} · ${Number(bestQuarter.unitsSold||0).toLocaleString()} units · ${((bestQuarter.marketShare||0)*100).toFixed(1)}% share</div>`:'<div style="color:var(--muted)">N/A</div>'}
+        </div>
+        <div class="panel" style="padding:16px">
+          <h4 style="margin:0 0 8px;font-size:.85rem;color:var(--red)">📉 Toughest Quarter</h4>
+          ${worstQuarter?`<div style="font-size:1.1rem;font-weight:700">Q${worstQuarter.quarter}</div>
+          <div style="font-size:.8rem;color:var(--muted)">Net Income: $${Number(worstQuarter.netIncome||0).toLocaleString()} · $${Number(worstQuarter.revenue||0).toLocaleString()} revenue</div>`:'<div style="color:var(--muted)">N/A</div>'}
+        </div>
+      </div>
+
+      <!-- AI Final Analysis -->
+      <div class="panel" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-size:1.3rem;animation:pulse 1.5s infinite">🧠</span>
+          <h3 style="margin:0">AI Coach — Final Assessment</h3>
+        </div>
+        <div id="finalAnalysis">
+          <p style="color:var(--muted);font-size:.85rem">Generating your personalized game analysis...</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:12px;justify-content:center;padding:20px 0">
+        <button class="btn btn-green" onclick="window.location.href='/dashboard.html'" style="padding:12px 32px;font-size:1rem">🏠 Back to Dashboard</button>
+        <button class="btn btn-outline" onclick="window.print()" style="padding:12px 24px;font-size:1rem">🖨️ Print Report</button>
+      </div>
+
+    </div>
+  `;
+
+  // Hide sidebar decision items, keep reports visible
+  document.querySelectorAll('.sidebar-item[data-tab]').forEach(item=>{
+    const reportTabs=['results','financials','research','leaderboard','advisor'];
+    if(!reportTabs.includes(item.dataset.tab)){
+      item.style.opacity='0.4';
+      item.style.pointerEvents='none';
+    }
+  });
+
+  // Generate AI final analysis
+  generateFinalAnalysis(history,leaderboard,playerRank);
+}
+
+async function generateFinalAnalysis(history,leaderboard,playerRank){
+  const totalRevenue=history.reduce((s,r)=>s+(r.revenue||0),0);
+  const totalProfit=history.reduce((s,r)=>s+(r.netIncome||0),0);
+  const totalUnits=history.reduce((s,r)=>s+(r.unitsSold||0),0);
+  const avgScore=history.length>0?(history.reduce((s,r)=>s+(r.scorecard?.balanced||0),0)/history.length):0;
+
+  const revTrend=history.map(h=>'Q'+h.quarter+':$'+Number(h.revenue||0).toLocaleString()).join(' → ');
+  const shareTrend=history.map(h=>'Q'+h.quarter+':'+((h.marketShare||0)*100).toFixed(0)+'%').join(' → ');
+  const scoreTrend=history.map(h=>'Q'+h.quarter+':'+(h.scorecard?.balanced||0).toFixed(1)).join(' → ');
+
+  const rankInfo=leaderboard.map((t,i)=>'#'+(i+1)+' '+t.name+(t.isPlayer?' (PLAYER)':' (AI)')+': score='+parseFloat(t.cumulative_scorecard||0).toFixed(2)+', rev=$'+Number(t.totalRevenue||0).toLocaleString()+', profit=$'+Number(t.totalProfit||0).toLocaleString()).join('\n');
+
+  const prompt=`You are a sharp, experienced marketing professor giving a final game debrief to a student who just completed an 8-quarter marketing simulation. Be insightful, specific, and educational.
+
+FINAL RESULTS:
+- Final Rank: #${playerRank} of ${leaderboard.length}
+- Total Revenue: $${totalRevenue.toLocaleString()} | Total Profit: $${totalProfit.toLocaleString()} | Total Units: ${totalUnits.toLocaleString()}
+- Average Scorecard: ${avgScore.toFixed(2)}/100
+- Brands: ${brands.map(b=>b.name+' targeting '+b.target_segment).join('; ')}
+
+QUARTERLY TRENDS:
+Revenue: ${revTrend}
+Market Share: ${shareTrend}
+Scorecard: ${scoreTrend}
+
+FINAL STANDINGS:
+${rankInfo}
+
+Write a comprehensive but concise final assessment in exactly this format:
+
+OVERALL GRADE
+Give a letter grade (A+ to F) with a one-sentence justification based on ranking, profitability, and strategic consistency.
+
+WHAT WENT WELL
+2-3 specific strengths demonstrated during the simulation. Reference actual quarters and numbers where performance was strong.
+
+WHAT COULD IMPROVE
+2-3 specific areas for improvement. Be constructive and reference data showing where things went wrong or opportunities were missed.
+
+KEY TAKEAWAY
+One powerful marketing lesson this simulation demonstrated. This should be a genuine insight about marketing strategy, pricing, or competitive dynamics — not generic advice.
+
+FINAL SCORE BREAKDOWN
+A brief note on what drove the scorecard — which components (financial, market, marketing effectiveness, investment, wealth) were strongest and weakest.
+
+Keep total response under 300 words. Be specific with numbers. Sound like a respected professor, not a chatbot.`;
+
+  try{
+    const response=await apiFetch('/api/ai/advisor',{method:'POST',body:JSON.stringify({prompt,max_tokens:800})});
+    if(response.error)throw new Error(response.error);
+    const text=response.text||'';
+
+    // Parse sections
+    let html='';
+    const sections=text.split(/^(OVERALL GRADE|WHAT WENT WELL|WHAT COULD IMPROVE|KEY TAKEAWAY|FINAL SCORE BREAKDOWN)\s*$/gm);
+    const sectionStyles={
+      'OVERALL GRADE':{icon:'🎓',bg:'rgba(139,92,246,.06)',border:'1px solid rgba(139,92,246,.15)'},
+      'WHAT WENT WELL':{icon:'✅',bg:'rgba(52,211,153,.06)',border:'1px solid rgba(52,211,153,.12)'},
+      'WHAT COULD IMPROVE':{icon:'🔧',bg:'rgba(251,191,36,.06)',border:'1px solid rgba(251,191,36,.12)'},
+      'KEY TAKEAWAY':{icon:'💡',bg:'rgba(59,130,246,.06)',border:'1px solid rgba(59,130,246,.12)'},
+      'FINAL SCORE BREAKDOWN':{icon:'📊',bg:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.12)'}
+    };
+
+    for(let i=1;i<sections.length;i+=2){
+      const title=sections[i].trim();
+      const body=(sections[i+1]||'').trim();
+      if(!body)continue;
+      const s=sectionStyles[title]||{icon:'📋',bg:'transparent',border:'none'};
+      const bodyHtml=body.split('\n').filter(l=>l.trim()).map(l=>{
+        if(l.trim().match(/^[-•\d]/)){
+          return '<div style="padding:2px 0 2px 12px;font-size:.88rem;line-height:1.5;color:var(--text-secondary)">'+esc(l)+'</div>';
+        }
+        return '<p style="margin:0 0 6px;font-size:.88rem;line-height:1.5;color:var(--text-secondary)">'+esc(l)+'</p>';
+      }).join('');
+      html+=`<div style="background:${s.bg};border:${s.border};border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="font-weight:600;font-size:.8rem;color:var(--text);margin-bottom:6px">${s.icon} ${title}</div>
+        ${bodyHtml}
+      </div>`;
+    }
+
+    if(!html)html='<p style="font-size:.88rem;line-height:1.6;color:var(--text-secondary)">'+esc(text).replace(/\n/g,'<br>')+'</p>';
+    document.getElementById('finalAnalysis').innerHTML=html;
+  }catch(e){
+    console.error('Final analysis error:',e);
+    document.getElementById('finalAnalysis').innerHTML='<p style="color:var(--muted)">Could not generate analysis. Review your quarterly results above for insights.</p>';
+  }
 }
 
 function setupScenarioDefaults(){
@@ -540,7 +849,8 @@ function setupScenarioDefaults(){
   const activeLC=ACTIVE_REGIONS.map(r=>r.toLowerCase());
 
   // For each static region grid, hide columns for inactive regions
-  document.querySelectorAll('.region-grid').forEach(grid=>{
+  // Skip dynamically-generated grids (pricing, production) which handle their own columns
+  document.querySelectorAll('.region-grid:not(.dynamic-grid)').forEach(grid=>{
     const cells=Array.from(grid.children);
     // Standard 4-column grid: label + 3 regions
     const cols=4;
@@ -589,7 +899,7 @@ function updatePricingTable(){
   const maxCost=Math.max(...brands.filter(b=>b.is_active).map(b=>parseFloat(b.unit_cost)||0));
   const smartPrice=maxCost>0?Math.ceil((maxCost*1.35)/10)*10:SUGGESTED.price;
   
-  container.innerHTML=`<div class="region-grid" style="grid-template-columns:150px repeat(${cols},1fr)">
+  container.innerHTML=`<div class="region-grid dynamic-grid" style="grid-template-columns:150px repeat(${cols},1fr)">
     <div class="header">Brand</div>${ACTIVE_REGIONS.map(r=>`<div class="header">${r}</div>`).join('')}
     ${brands.filter(b=>b.is_active).map(b=>{
       const cost=parseFloat(b.unit_cost)||0;
@@ -651,6 +961,11 @@ async function saveDecisions(){
 
 async function submitDecisions(){
   decisions=collectDecisions();
+  console.log('📤 Submitting Q'+(game.current_quarter)+' decisions:', JSON.stringify({
+    distribution: decisions.distribution,
+    advertising: {latam: decisions.advertising?.latam, europe: decisions.advertising?.europe},
+    salesforce_latam: decisions.salesforce?.latam
+  }));
   var btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='⏳ Processing...';
   document.getElementById('submitStatus').textContent='Processing quarter...';
@@ -680,6 +995,7 @@ async function submitDecisions(){
       '</div>'+
       '<p style="text-align:center;color:#94a3b8;margin:0 0 12px">'+(data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+'</p>'+
       '<button onclick="document.getElementById(\'resultsModal\').remove();location.reload()" style="display:block;width:100%;padding:12px;margin-top:16px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer">Continue →</button>'+
+      (data._debug ? '<details style="margin-top:12px;font-size:.7rem;color:#94a3b8"><summary>🔧 Debug Data</summary><pre style="overflow:auto;max-height:200px;background:#0f172a;padding:8px;border-radius:4px">'+JSON.stringify(data._debug,null,2)+'</pre></details>' : '')+
     '</div>';
     document.body.appendChild(modal);
     return; // Don't reload until user clicks Continue
@@ -789,8 +1105,9 @@ async function loadResults(){
   document.getElementById('ovDemand').textContent=Number(r.demand||0).toLocaleString();
   document.getElementById('ovBSC').textContent=(parseFloat(r.scorecard?.balanced||0)).toFixed(2);
 
-  // Replace "Getting Started" with last-quarter summary
-  document.getElementById('overviewTips').innerHTML='<h3>📈 Q'+(game.current_quarter-1)+' Summary</h3><p style="color:var(--muted);font-size:.9rem;line-height:1.6">You sold '+Number(r.unitsSold||0).toLocaleString()+' units generating $'+Number(r.revenue||0).toLocaleString()+' in revenue. Net income was $'+Number(r.netIncome||0).toLocaleString()+'. Review the Results and Financials tabs for full details.</p>';
+  // Replace "Getting Started" with advisor loading state, then auto-analyze
+  document.getElementById('overviewTips').innerHTML='<div id="overviewAdvisor"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:1.3rem;animation:pulse 1.5s infinite">🧠</span><h3 style="margin:0">AI Advisor analyzing Q'+(game.current_quarter-1)+' performance...</h3></div><p style="color:var(--muted);font-size:.85rem">Reviewing your financials, market position, and competitive landscape...</p></div>';
+  loadOverviewAdvisor();
 
   // Scorecard — from nested scorecard object
   const sc=r.scorecard||{};
@@ -912,6 +1229,252 @@ async function loadResearch(){
 
 function N(v){return Number(v||0).toLocaleString()}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+async function loadOverviewAdvisor(){
+  if(!results||game.current_quarter<2)return;
+  const r=results;
+  const sc=r.scorecard||{};
+  const lastQ=game.current_quarter-1;
+
+  // Fetch all previous quarters for trend data
+  let history=[];
+  for(let q=1;q<=lastQ;q++){
+    try{
+      const d=await apiFetch(`/api/simulation/get-results?game_id=${gameId}&team_id=${team.id}&quarter=${q}`);
+      if(d.result)history.push({quarter:q,revenue:d.result.revenue||0,netIncome:d.result.netIncome||0,unitsSold:d.result.unitsSold||0,marketShare:d.result.marketShare||0,endingCash:d.result.endingCash||0,scorecard:d.result.scorecard?.balanced||0});
+    }catch(e){}
+  }
+
+  // Fetch leaderboard for competitive context
+  let leaderboard=[];
+  try{
+    const lb=await apiFetch(`/api/simulation/leaderboard?game_id=${gameId}`);
+    leaderboard=(lb.leaderboard||[]).map(t=>({name:t.name,score:t.score,isPlayer:t.id===team.id}));
+  }catch(e){}
+
+  const revTrend=history.map(h=>'Q'+h.quarter+': $'+Number(h.revenue).toLocaleString()).join(' → ');
+  const incomeTrend=history.map(h=>'Q'+h.quarter+': $'+Number(h.netIncome).toLocaleString()).join(' → ');
+  const shareTrend=history.map(h=>'Q'+h.quarter+': '+(parseFloat(h.marketShare)*100).toFixed(1)+'%').join(' → ');
+  const scoreTrend=history.map(h=>'Q'+h.quarter+': '+parseFloat(h.score||h.scorecard||0).toFixed(1)).join(' → ');
+  const rankInfo=leaderboard.map((t,i)=>'#'+(i+1)+' '+t.name+(t.isPlayer?' (YOU)':' (AI)')+': '+parseFloat(t.score||0).toFixed(1)).join(', ');
+
+  const totalExp=(r.advertisingExpense||0)+(r.salesforceExpense||0)+(r.distributionExpense||0)+(r.internetExpense||0)+(r.rdExpense||0);
+  const grossProfit=(r.revenue||0)-(r.cogs||0);
+
+  const prompt=`You are a friendly, sharp marketing strategy advisor in a business simulation game. A student just completed Q${lastQ} of 8. Give them a quick, insightful briefing.
+
+QUARTER ${lastQ} RESULTS:
+- Revenue: $${(r.revenue||0).toLocaleString()} | COGS: $${(r.cogs||0).toLocaleString()} | Gross Profit: $${grossProfit.toLocaleString()}
+- Expenses: $${totalExp.toLocaleString()} (Ad: $${(r.advertisingExpense||0).toLocaleString()}, Sales: $${(r.salesforceExpense||0).toLocaleString()}, Dist: $${(r.distributionExpense||0).toLocaleString()}, Internet: $${(r.internetExpense||0).toLocaleString()}, R&D: $${(r.rdExpense||0).toLocaleString()})
+- Net Income: $${(r.netIncome||0).toLocaleString()} | Cash: $${(r.endingCash||0).toLocaleString()}
+- Units Sold: ${r.unitsSold||0} | Demand: ${r.demand||0} | Market Share: ${((r.marketShare||0)*100).toFixed(1)}% | Stockouts: ${r.stockouts||0}
+
+TRENDS ACROSS QUARTERS:
+- Revenue: ${revTrend}
+- Net Income: ${incomeTrend}
+- Market Share: ${shareTrend}
+
+RANKINGS: ${rankInfo}
+
+BRANDS: ${brands.map(b=>b.name+' targeting '+b.target_segment+' at ~$'+(parseFloat(b.unit_cost)||0).toFixed(0)+' unit cost').join('; ')}
+QUARTERS REMAINING: ${8-lastQ}
+
+Write a brief advisor briefing in exactly this format. Keep each section to 1-2 sentences. Be specific with numbers and trends. Be encouraging but honest.
+
+ASSESSMENT
+One punchy sentence on their overall position and trajectory. Reference their ranking and trend direction.
+
+KEY INSIGHT
+The single most important thing they should understand about their current performance. Use specific numbers from the data comparing revenue vs expenses, or market share trend, or competitive gap.
+
+ACTION ITEMS
+Exactly 3 bullet points. Each must be a specific, actionable recommendation with a concrete number (e.g., "Cut advertising from $300K to $150K" not "Reduce advertising"). Focus on what will most improve their scorecard.
+
+Keep the total response under 150 words. No fluff, no generic advice. Sound like a smart coach, not a textbook.`;
+
+  try{
+    const response=await apiFetch('/api/ai/advisor',{method:'POST',body:JSON.stringify({prompt,max_tokens:600})});
+    if(response.error)throw new Error(response.error);
+    const text=response.text||'';
+
+    // Parse sections
+    let html='<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:1.3rem">🧠</span><h3 style="margin:0">AI Advisor — Q'+lastQ+' Briefing</h3></div>';
+
+    const sections=text.split(/^(ASSESSMENT|KEY INSIGHT|ACTION ITEMS)\s*$/gm);
+    const sectionStyles={
+      'ASSESSMENT':{icon:'📊',bg:'transparent',border:'none',pad:'0'},
+      'KEY INSIGHT':{icon:'💡',bg:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.12)',pad:'12px'},
+      'ACTION ITEMS':{icon:'🎯',bg:'rgba(52,211,153,.06)',border:'1px solid rgba(52,211,153,.12)',pad:'12px'}
+    };
+
+    for(let i=1;i<sections.length;i+=2){
+      const title=sections[i].trim();
+      const body=(sections[i+1]||'').trim();
+      if(!body)continue;
+      const s=sectionStyles[title]||{icon:'📋',bg:'transparent',border:'none',pad:'0'};
+
+      let bodyHtml='';
+      if(title==='ACTION ITEMS'){
+        const items=body.split('\n').filter(l=>l.trim().match(/^[-•\d]/));
+        bodyHtml='<ul style="margin:4px 0 0;padding-left:18px">'+items.map(l=>'<li style="margin-bottom:4px;font-size:.88rem;line-height:1.5;color:var(--text-secondary)">'+esc(l.replace(/^[-•\d.)\s]+/,''))+'</li>').join('')+'</ul>';
+      }else{
+        bodyHtml=body.split('\n').filter(l=>l.trim()).map(l=>'<p style="margin:0 0 4px;font-size:.88rem;line-height:1.5;color:var(--text-secondary)">'+esc(l)+'</p>').join('');
+      }
+
+      html+='<div style="margin-bottom:10px;padding:'+s.pad+';background:'+s.bg+';border:'+s.border+';border-radius:8px">';
+      if(title!=='ASSESSMENT')html+='<div style="font-size:.75rem;font-weight:600;color:#818cf8;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">'+s.icon+' '+title+'</div>';
+      html+=bodyHtml+'</div>';
+    }
+
+    // Fallback
+    if(sections.length<3){
+      html+='<p style="font-size:.88rem;line-height:1.5;color:var(--text-secondary)">'+text.replace(/\n/g,'<br>')+'</p>';
+    }
+
+    html+='<div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:.7rem;color:var(--muted)">Powered by AI • Based on Q'+lastQ+' data</span><button class="btn btn-outline btn-sm" style="font-size:.75rem;padding:4px 10px" onclick="document.querySelector(\'[data-tab=advisor]\').click()">Deep Analysis →</button></div>';
+
+    document.getElementById('overviewTips').innerHTML=html;
+
+  }catch(err){
+    console.error('Overview advisor error:',err);
+    document.getElementById('overviewTips').innerHTML='<h3>📈 Q'+(game.current_quarter-1)+' Summary</h3><p style="color:var(--muted);font-size:.9rem;line-height:1.6">You sold '+Number(r.unitsSold||0).toLocaleString()+' units generating $'+Number(r.revenue||0).toLocaleString()+' in revenue. Net income was $'+Number(r.netIncome||0).toLocaleString()+'.</p>';
+  }
+}
+
+async function getAdvisorAnalysis(){
+  if(!results||game.current_quarter<2){
+    alert('Play at least one quarter first to get advisor recommendations.');
+    return;
+  }
+
+  const btn=document.getElementById('advisorBtn');
+  const content=document.getElementById('advisorContent');
+  const loading=document.getElementById('advisorLoading');
+  const empty=document.getElementById('advisorEmpty');
+
+  btn.disabled=true;
+  empty.style.display='none';
+  content.style.display='none';
+  loading.style.display='block';
+
+  // Gather all context for the advisor
+  const r=results;
+  const sc=r.scorecard||{};
+  const sat=r.satisfaction||{};
+  const lastQ=game.current_quarter-1;
+
+  // Fetch history for trends
+  let history=[];
+  for(let q=1;q<=lastQ;q++){
+    try{
+      const d=await apiFetch(`/api/simulation/get-results?game_id=${gameId}&team_id=${team.id}&quarter=${q}`);
+      if(d.result)history.push({quarter:q,revenue:d.result.revenue||0,netIncome:d.result.netIncome||0,unitsSold:d.result.unitsSold||0,marketShare:d.result.marketShare||0,endingCash:d.result.endingCash||0});
+    }catch(e){}
+  }
+  const revTrend=history.map(h=>'Q'+h.quarter+': $'+Number(h.revenue).toLocaleString()).join(' → ');
+  const incomeTrend=history.map(h=>'Q'+h.quarter+': $'+Number(h.netIncome).toLocaleString()).join(' → ');
+
+  const prompt=`You are a marketing strategy advisor for a business simulation game. A student is running a company in a competitive market simulation with AI opponents.
+
+Here is their current situation after Q${lastQ}:
+
+FINANCIAL RESULTS:
+- Revenue: $${(r.revenue||0).toLocaleString()}
+- Cost of Goods: $${(r.cogs||0).toLocaleString()}  
+- Gross Profit: $${((r.revenue||0)-(r.cogs||0)).toLocaleString()}
+- Total Operating Expenses: $${((r.advertisingExpense||0)+(r.salesforceExpense||0)+(r.distributionExpense||0)+(r.internetExpense||0)+(r.rdExpense||0)).toLocaleString()}
+  (Advertising: $${(r.advertisingExpense||0).toLocaleString()}, Sales Force: $${(r.salesforceExpense||0).toLocaleString()}, Distribution: $${(r.distributionExpense||0).toLocaleString()}, Internet: $${(r.internetExpense||0).toLocaleString()}, R&D: $${(r.rdExpense||0).toLocaleString()})
+- Net Income: $${(r.netIncome||0).toLocaleString()}
+- Ending Cash: $${(r.endingCash||0).toLocaleString()}
+
+TRENDS:
+- Revenue: ${revTrend}
+- Net Income: ${incomeTrend}
+
+MARKET PERFORMANCE:
+- Units Sold: ${r.unitsSold||0}
+- Total Demand: ${r.demand||0}
+- Market Share: ${((r.marketShare||0)*100).toFixed(1)}%
+
+SCORECARD (0-100 scale, current total: ${(sc.balanced||0).toFixed(1)}):
+- Financial: ${sc.financial} | Market: ${(sc.market||0).toFixed(2)} | Marketing Effectiveness: ${(sc.marketing||0).toFixed(2)} | Investment: ${(sc.investment||0).toFixed(1)} | Wealth Creation: ${(sc.wealth||0).toFixed(2)}
+
+BRANDS: ${brands.map(b=>b.name+' targeting '+b.target_segment+' (unit cost: $'+(parseFloat(b.unit_cost)||0).toFixed(0)+')').join('; ')}
+QUARTER: ${lastQ} of 8 (${8-lastQ} quarters remaining)
+
+Provide strategic advice in this exact format (use these exact section headers):
+
+PERFORMANCE SUMMARY
+2-3 sentences summarizing their current position — what's working and what's not.
+
+TOP PRIORITIES
+3-4 specific, actionable recommendations ranked by impact. Each should be one clear sentence with a specific number or action (e.g., "Reduce advertising from $200K to $120K" not "Consider reducing advertising").
+
+WATCH OUT
+1-2 risks or pitfalls to avoid next quarter.
+
+COMPETITIVE EDGE
+One specific move that could help them gain ground on the AI competitors.
+
+Keep it concise, direct, and encouraging. Use specific numbers from their data. This is an educational simulation so help them learn marketing strategy principles.`;
+
+  try{
+    const response=await apiFetch('/api/ai/advisor',{method:'POST',body:JSON.stringify({prompt,max_tokens:1000})});
+    if(response.error)throw new Error(response.error);
+    const text=response.text||'Unable to generate analysis.';
+
+    // Parse sections and render
+    const sections=[];
+    const sectionPattern=/^(PERFORMANCE SUMMARY|TOP PRIORITIES|WATCH OUT|COMPETITIVE EDGE)\s*$/gm;
+    const parts=text.split(sectionPattern);
+    
+    // Build HTML from parsed sections
+    let html='';
+    const icons={'PERFORMANCE SUMMARY':'📋','TOP PRIORITIES':'🎯','WATCH OUT':'⚠️','COMPETITIVE EDGE':'⚡'};
+    const classes={'PERFORMANCE SUMMARY':'advisor-section','TOP PRIORITIES':'advisor-section advisor-highlight','WATCH OUT':'advisor-section advisor-warning','COMPETITIVE EDGE':'advisor-section advisor-highlight'};
+
+    for(let i=1;i<parts.length;i+=2){
+      const title=parts[i].trim();
+      const body=(parts[i+1]||'').trim();
+      if(!body)continue;
+
+      // Convert markdown-style lists to HTML
+      let bodyHtml=body.split('\n').filter(l=>l.trim()).map(line=>{
+        line=line.trim();
+        if(line.match(/^\d+\.\s/))return '<li>'+esc(line.replace(/^\d+\.\s/,''))+'</li>';
+        if(line.match(/^[-•]\s/))return '<li>'+esc(line.replace(/^[-•]\s/,''))+'</li>';
+        return '<p>'+esc(line)+'</p>';
+      }).join('');
+
+      // Wrap list items in ul
+      if(bodyHtml.includes('<li>')){
+        bodyHtml=bodyHtml.replace(/(<li>.*<\/li>)/s,'<ul>$1</ul>');
+      }
+
+      html+='<div class="'+(classes[title]||'advisor-section')+'"><h4>'+(icons[title]||'💡')+' '+title+'</h4>'+bodyHtml+'</div>';
+    }
+
+    // Fallback if parsing didn't work
+    if(!html){
+      html='<div class="advisor-section"><h4>📋 Analysis</h4><p>'+text.replace(/\n/g,'<br>')+'</p></div>';
+    }
+
+    html+='<div class="advisor-meta"><span>Based on Q'+lastQ+' results</span><button class="btn btn-outline btn-sm" onclick="getAdvisorAnalysis()">🔄 Refresh Analysis</button></div>';
+
+    content.innerHTML=html;
+    content.style.display='block';
+    loading.style.display='none';
+    btn.disabled=false;
+
+  }catch(err){
+    console.error('Advisor error:',err);
+    loading.style.display='none';
+    empty.style.display='block';
+    btn.disabled=false;
+    content.innerHTML='<div class="advisor-section advisor-warning"><h4>⚠️ Advisor Unavailable</h4><p>Could not connect to the AI advisor. Please try again.</p></div>';
+    content.style.display='block';
+  }
+}
 
 init();
 </script>
