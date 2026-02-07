@@ -569,7 +569,7 @@ function loadBrandList(){
   container.innerHTML=`<h4 style="margin:0 0 6px">Active Brands</h4>
     <p style="font-size:.7rem;color:var(--muted);margin:0 0 8px">🔒 Brands are locked once created. Use R&D investment to improve products over time. You can create additional brands targeting different segments.</p>
     <table><thead><tr><th>Brand</th><th>Segment</th><th>Quality</th><th>Unit Cost</th><th>Status</th></tr></thead><tbody>${
-    brands.map(b=>{const segName=(COMPONENT_LABELS.segments||{})[b.target_segment]||b.target_segment;return `<tr><td><strong>${esc(b.name)}</strong></td><td>${segName}</td><td>${(b.overall_quality||0).toFixed(1)}</td><td>$${Number(b.unit_cost||0).toLocaleString()}</td><td>${b.is_active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--muted)">Inactive</span>'}</td></tr>`}).join('')
+    brands.map(b=>{const segName=(COMPONENT_LABELS.segments||{})[b.target_segment]||b.target_segment;return `<tr><td><strong>${esc(b.name)}</strong></td><td>${segName}</td><td>${parseFloat(b.overall_quality||0).toFixed(1)}</td><td>$${Number(b.unit_cost||0).toLocaleString()}</td><td>${b.is_active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--muted)">Inactive</span>'}</td></tr>`}).join('')
   }</tbody></table>`;
   updatePricingTable();
   updateProductionTable();
@@ -655,6 +655,7 @@ async function submitDecisions(){
 
   // Debug: log engine diagnostics to console
   if(data._debug){console.log('🔍 ENGINE DEBUG:',JSON.stringify(data._debug,null,2));}
+  console.log('📦 FULL API RESPONSE:', JSON.stringify(data, null, 2));
 
   // Quarter processed! Show results summary
   var r=data.results;
@@ -664,17 +665,21 @@ async function submitDecisions(){
     alert('✅ Q'+(data.quarterProcessed)+' Results!\n\n'+
       '💰 Revenue: $'+Number(r.revenue||0).toLocaleString()+'\n'+
       '📊 Net Income: $'+Number(r.netIncome||0).toLocaleString()+'\n'+
-      '📈 Market Share: '+((r.marketShare||0)*100).toFixed(1)+'%\n'+
-      '🏆 Scorecard: '+(r.balancedScorecard||0).toFixed(2)+'\n'+
+      '📈 Market Share: '+(parseFloat(r.marketShare||0)*100).toFixed(1)+'%\n'+
+      '🏆 Scorecard: '+(parseFloat(r.balancedScorecard||0)).toFixed(2)+'\n'+
       '🥇 Rank: #'+rank+' of '+(data.leaderboard?.length||1)+'\n\n'+
       (data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+
-      (data._debug?'\n\n--- Debug ---\nBrands: '+JSON.stringify(data._debug.brandNames)+
-      '\nTargets: '+JSON.stringify(data._debug.brandTargets)+
-      '\nSegments: '+JSON.stringify(data._debug.segmentNames)+
-      '\nPricing: '+JSON.stringify(data._debug.normalizedPricing)+
-      '\nDistrib: '+JSON.stringify(data._debug.normalizedDistribution)+
-      '\nDemand: '+data._debug.playerDemand+
-      '\nRevenue: '+data._debug.playerRevenue:''));
+      '\n\n--- DEBUG (v2) ---'+
+      '\nHas _debug: '+(!!data._debug)+
+      (data._debug?
+        '\nBrands: '+JSON.stringify(data._debug.brandNames)+
+        '\nTargets: '+JSON.stringify(data._debug.brandTargets)+
+        '\nSegments: '+JSON.stringify(data._debug.segmentNames)+
+        '\nPricing: '+JSON.stringify(data._debug.normalizedPricing)+
+        '\nDistrib: '+JSON.stringify(data._debug.normalizedDistribution)+
+        '\nDemand: '+data._debug.playerDemand+
+        '\nRevenue: '+data._debug.playerRevenue
+        :'\nNo debug data - old code still deployed?'));
   }
   // Reload to show new quarter
   location.reload();
@@ -777,19 +782,19 @@ async function loadResults(){
   document.getElementById('ovRevenue').textContent='$'+Number(r.revenue||0).toLocaleString();
   document.getElementById('ovIncome').textContent='$'+Number(r.net_income||0).toLocaleString();
   document.getElementById('ovIncome').className='stat-value '+((r.net_income||0)>=0?'positive':'negative');
-  document.getElementById('ovShare').textContent=((r.market_share||0)*100).toFixed(1)+'%';
+  document.getElementById('ovShare').textContent=(parseFloat(r.market_share||0)*100).toFixed(1)+'%';
   document.getElementById('ovDemand').textContent=Number(r.total_demand||0).toLocaleString();
-  document.getElementById('ovBSC').textContent=(r.balanced_scorecard||0).toFixed(2);
+  document.getElementById('ovBSC').textContent=(parseFloat(r.balanced_scorecard||0)).toFixed(2);
 
   // Results tab
   document.getElementById('resultsContent').innerHTML=`
     <div class="scorecard-bar">
-      <div class="sc-item sc-total"><div class="label">Total Score</div><div class="score">${(r.balanced_scorecard||0).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Financial</div><div class="score">${(r.financial_performance||0).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Market</div><div class="score">${(r.market_performance||0).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Mktg Effect.</div><div class="score">${(r.marketing_effectiveness||0).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Investment</div><div class="score">${(r.investment_future||0).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Wealth</div><div class="score">${(r.wealth_creation||0).toFixed(2)}</div></div>
+      <div class="sc-item sc-total"><div class="label">Total Score</div><div class="score">${(parseFloat(r.balanced_scorecard||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Financial</div><div class="score">${(parseFloat(r.financial_performance||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Market</div><div class="score">${(parseFloat(r.market_performance||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Mktg Effect.</div><div class="score">${(parseFloat(r.marketing_effectiveness||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Investment</div><div class="score">${(parseFloat(r.investment_future||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Wealth</div><div class="score">${(parseFloat(r.wealth_creation||0)).toFixed(2)}</div></div>
     </div>
     <div class="panel"><h3>Q${game.current_quarter-1} Performance</h3>
       <div class="panel-grid">
@@ -830,7 +835,7 @@ async function loadLeaderboard(){
   container.innerHTML=data.leaderboard.map(function(t,i){
     var rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
     var isYou=t.is_player||t.isPlayer;
-    return '<div class="lb-row" style="'+(isYou?'background:rgba(59,130,246,.08);border:1px solid var(--primary);border-radius:8px;padding:8px 12px':'')+'"><div class="lb-rank '+rankClass+'">#'+(i+1)+'</div><div class="lb-name">'+(t.logo_emoji||'🏢')+' '+esc(t.name)+(isYou?' <span style="color:var(--primary);font-size:.75rem">YOU</span>':'<span style="color:var(--muted);font-size:.75rem"> 🤖 AI</span>')+'</div><div class="lb-score">'+(t.cumulative_scorecard||t.balanced_scorecard||0).toFixed(2)+'</div></div>';
+    return '<div class="lb-row" style="'+(isYou?'background:rgba(59,130,246,.08);border:1px solid var(--primary);border-radius:8px;padding:8px 12px':'')+'"><div class="lb-rank '+rankClass+'">#'+(i+1)+'</div><div class="lb-name">'+(t.logo_emoji||'🏢')+' '+esc(t.name)+(isYou?' <span style="color:var(--primary);font-size:.75rem">YOU</span>':'<span style="color:var(--muted);font-size:.75rem"> 🤖 AI</span>')+'</div><div class="lb-score">'+(parseFloat(t.cumulative_scorecard||t.balanced_scorecard||0)).toFixed(2)+'</div></div>';
   }).join('');
 }
 

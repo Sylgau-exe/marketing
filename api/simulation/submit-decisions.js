@@ -226,6 +226,11 @@ export default async function handler(req, res) {
  * This bridges the gap without changing either side.
  */
 function normalizePlayerDecisions(d, brands, scenario) {
+  console.log('[NORMALIZE] Input keys:', Object.keys(d));
+  console.log('[NORMALIZE] Input pricing:', JSON.stringify(d.pricing));
+  console.log('[NORMALIZE] Input distribution:', JSON.stringify(d.distribution));
+  console.log('[NORMALIZE] Brands:', brands.map(b => `${b.name}(${b.target_segment})`));
+  
   const normalized = {
     rdBudget: parseFloat(d.rdBudget) || 0,
     rdProjects: d.rdProjects || {},
@@ -304,6 +309,11 @@ function normalizePlayerDecisions(d, brands, scenario) {
     }
   }
 
+  console.log('[NORMALIZE] Output pricing:', JSON.stringify(normalized.pricing));
+  console.log('[NORMALIZE] Output distribution:', JSON.stringify(normalized.distribution));
+  console.log('[NORMALIZE] Output advertising:', JSON.stringify(normalized.advertising));
+  console.log('[NORMALIZE] Output salesforce:', JSON.stringify(normalized.salesforce));
+  
   return normalized;
 }
 
