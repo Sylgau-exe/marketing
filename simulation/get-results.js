@@ -37,14 +37,41 @@ export default async function handler(req, res) {
 
 function formatResult(r) {
   return {
-    quarter: r.quarter, demand: r.total_demand, unitsSold: r.units_sold, stockouts: r.stockouts,
-    marketShare: r.market_share_primary, revenue: parseFloat(r.revenue), cogs: parseFloat(r.cost_of_goods),
-    grossProfit: parseFloat(r.gross_profit), advertisingExpense: parseFloat(r.advertising_expense),
-    salesforceExpense: parseFloat(r.salesforce_expense), distributionExpense: parseFloat(r.distribution_expense),
-    internetExpense: parseFloat(r.internet_expense), rdExpense: parseFloat(r.rd_expense),
-    operatingProfit: parseFloat(r.operating_profit), netIncome: parseFloat(r.net_income),
-    cashFlow: parseFloat(r.cash_flow), endingCash: parseFloat(r.ending_cash),
-    satisfaction: { brand: r.brand_satisfaction, ad: r.ad_satisfaction, price: r.price_satisfaction, overall: r.overall_satisfaction },
-    scorecard: { financial: r.financial_performance, market: r.market_performance, marketing: r.marketing_effectiveness, investment: r.investment_in_future, wealth: r.creation_of_wealth, balanced: r.balanced_scorecard, cumulative: r.cumulative_scorecard }
+    quarter: r.quarter,
+    demand: parseInt(r.total_demand) || 0,
+    unitsSold: parseInt(r.total_units_sold) || 0,
+    stockouts: parseInt(r.stockouts) || 0,
+    marketShare: parseFloat(r.market_share_primary) || 0,
+    marketShareSecondary: parseFloat(r.market_share_secondary) || 0,
+    revenue: parseFloat(r.total_revenue) || 0,
+    cogs: parseFloat(r.cost_of_goods) || 0,
+    grossProfit: parseFloat(r.gross_profit) || 0,
+    advertisingExpense: parseFloat(r.advertising_expense) || 0,
+    salesforceExpense: parseFloat(r.salesforce_expense) || 0,
+    distributionExpense: parseFloat(r.distribution_expense) || 0,
+    internetExpense: parseFloat(r.internet_marketing_expense) || 0,
+    rdExpense: parseFloat(r.rd_expense) || 0,
+    adminExpense: parseFloat(r.admin_expense) || 0,
+    totalExpenses: parseFloat(r.total_expenses) || 0,
+    operatingProfit: parseFloat(r.operating_profit) || 0,
+    netIncome: parseFloat(r.net_income) || 0,
+    beginningCash: parseFloat(r.beginning_cash) || 0,
+    cashFlow: parseFloat(r.net_income) || 0,
+    endingCash: parseFloat(r.ending_cash) || 0,
+    satisfaction: {
+      brand: parseFloat(r.brand_satisfaction) || 0,
+      ad: parseFloat(r.ad_satisfaction) || 0,
+      price: parseFloat(r.price_satisfaction) || 0,
+      overall: parseFloat(r.overall_satisfaction) || 0
+    },
+    scorecard: {
+      financial: parseFloat(r.financial_performance) || 0,
+      market: parseFloat(r.market_performance) || 0,
+      marketing: parseFloat(r.marketing_effectiveness) || 0,
+      investment: parseFloat(r.investment_in_future) || 0,
+      wealth: parseFloat(r.creation_of_wealth) || 0,
+      balanced: parseFloat(r.balanced_scorecard) || 0,
+      cumulative: parseFloat(r.cumulative_scorecard || r.balanced_scorecard) || 0
+    }
   };
 }

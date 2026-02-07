@@ -652,39 +652,13 @@ async function submitDecisions(){
   if(data.code==='PAYWALL'){btn.disabled=false;btn.textContent='Submit Q'+(game.current_quarter||1);showPaywall(data);return;}
   if(data.error){btn.disabled=false;btn.textContent='Submit Q'+(game.current_quarter||1);return alert(data.error);}
 
-  // Debug: log engine diagnostics to console
-  if(data._debug){console.log('🔍 ENGINE DEBUG:',JSON.stringify(data._debug,null,2));}
-  console.log('📦 FULL API RESPONSE:', JSON.stringify(data, null, 2));
-
   // Quarter processed! Show results summary
   var r=data.results;
   if(r){
     var rank=1;
     if(data.leaderboard){data.leaderboard.forEach(function(t,i){if(t.isPlayer)rank=i+1});}
-    
-    var debugHtml='';
-    if(data._debug){
-      var factors='';
-      if(Array.isArray(data._debug.engineFactors)){
-        factors=data._debug.engineFactors.map(function(f){
-          if(f.skip) return '<div style="color:#f87171">'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' SKIP dist='+f.distRaw+'</div>';
-          return '<div>'+f.team+'|'+f.segment+'|'+f.region+': tgt='+f.targeting+' bf='+(f.brandFitScore||0).toFixed(3)+' pr='+(f.priceAttractiveness||0).toFixed(2)+' (p='+f.priceUsed+' min='+f.segMinPrice+' max='+f.segMaxPrice+') ad='+(f.adReach||0).toFixed(2)+' sf='+(f.salesEffectiveness||0).toFixed(2)+' di='+(f.distributionCoverage||0).toFixed(2)+' pull='+(f.pull||0).toFixed(5)+'</div>';
-        }).join('');
-      }
-      debugHtml='<details style="margin-top:12px;font-size:.7rem;color:#94a3b8"><summary style="cursor:pointer;font-weight:600">Debug v3</summary>'+
-        '<div style="margin-top:6px;font-family:monospace;white-space:pre-wrap;max-height:300px;overflow:auto;background:#0f172a;padding:8px;border-radius:6px">'+
-        'Brands: '+JSON.stringify(data._debug.brandNames)+'\n'+
-        'Targets: '+JSON.stringify(data._debug.brandTargets)+'\n'+
-        'Segments: '+JSON.stringify(data._debug.segmentNames)+'\n'+
-        'Pricing: '+JSON.stringify(data._debug.normalizedPricing)+'\n'+
-        'Distrib: '+JSON.stringify(data._debug.normalizedDistribution)+'\n'+
-        'Demand: '+data._debug.playerDemand+'\n'+
-        'Revenue: '+data._debug.playerRevenue+'\n\n'+
-        '--- ENGINE FACTORS ---\n'+factors+
-        '</div></details>';
-    }
 
-    // Show in-page modal (can't be suppressed by browser)
+    // Show in-page modal
     var modal=document.createElement('div');
     modal.id='resultsModal';
     modal.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7)';
@@ -692,14 +666,13 @@ async function submitDecisions(){
       '<h2 style="margin:0 0 16px;color:#34d399">✅ Q'+(data.quarterProcessed)+' Results</h2>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+
         '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Revenue</div><div style="font-size:1.3rem;font-weight:700">$'+Number(r.revenue||0).toLocaleString()+'</div></div>'+
-        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Net Income</div><div style="font-size:1.3rem;font-weight:700">$'+Number(r.netIncome||0).toLocaleString()+'</div></div>'+
+        '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Net Income</div><div style="font-size:1.3rem;font-weight:700;color:'+((r.netIncome||0)>=0?'#34d399':'#f87171')+'">$'+Number(r.netIncome||0).toLocaleString()+'</div></div>'+
         '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Market Share</div><div style="font-size:1.3rem;font-weight:700">'+(parseFloat(r.marketShare||0)*100).toFixed(1)+'%</div></div>'+
         '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Scorecard</div><div style="font-size:1.3rem;font-weight:700">'+(parseFloat(r.balancedScorecard||0)).toFixed(2)+'</div></div>'+
         '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Demand</div><div style="font-size:1.3rem;font-weight:700">'+Number(r.demand||0).toLocaleString()+'</div></div>'+
         '<div style="background:#0f172a;padding:12px;border-radius:8px"><div style="font-size:.7rem;color:#94a3b8">Rank</div><div style="font-size:1.3rem;font-weight:700">#'+rank+' of '+(data.leaderboard?.length||1)+'</div></div>'+
       '</div>'+
       '<p style="text-align:center;color:#94a3b8;margin:0 0 12px">'+(data.gameCompleted?'🎉 Simulation complete!':'Next: Q'+data.nextQuarter)+'</p>'+
-      debugHtml+
       '<button onclick="document.getElementById(\'resultsModal\').remove();location.reload()" style="display:block;width:100%;padding:12px;margin-top:16px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer">Continue →</button>'+
     '</div>';
     document.body.appendChild(modal);
@@ -731,14 +704,12 @@ async function createBrand(){
   const components={};
   COMPONENTS.forEach(c=>components[c]=parseInt(document.getElementById('comp_'+c).value)||3);
   
-  console.log('Creating brand:', {name, segment, components, team_id: team.id, game_id: gameId});
   
   const btn=document.querySelector('[onclick="createBrand()"]');
   if(btn){btn.disabled=true;btn.textContent='Creating...';}
   
   const data=await apiFetch('/api/team/brands',{method:'POST',body:JSON.stringify({game_id:gameId,team_id:team.id,name,target_segment:segment,components})});
   
-  console.log('Brand API response:', JSON.stringify(data));
   
   if(data.error){alert('Error: '+data.error);if(btn){btn.disabled=false;btn.textContent='Create Brand';}return}
   if(!data.brand){alert('Brand creation failed - no brand returned. Check console.');console.error('Full response:',data);if(btn){btn.disabled=false;btn.textContent='Create Brand';}return}
@@ -799,54 +770,70 @@ async function loadDecisions(){
 async function loadResults(){
   if(!team||game.current_quarter<2)return;
   const data=await apiFetch(`/api/simulation/get-results?game_id=${gameId}&team_id=${team.id}&quarter=${game.current_quarter-1}`);
-  if(!data.results)return;
-  results=data.results;
-  const r=results;
-  document.getElementById('ovCash').textContent='$'+Number(r.ending_cash||0).toLocaleString();
+  const r=data.result||null;
+  if(!r)return;
+  results=r;
+
+  // Overview tab — use camelCase from formatResult()
+  document.getElementById('ovCash').textContent='$'+Number(r.endingCash||0).toLocaleString();
   document.getElementById('ovRevenue').textContent='$'+Number(r.revenue||0).toLocaleString();
-  document.getElementById('ovIncome').textContent='$'+Number(r.net_income||0).toLocaleString();
-  document.getElementById('ovIncome').className='stat-value '+((r.net_income||0)>=0?'positive':'negative');
-  document.getElementById('ovShare').textContent=(parseFloat(r.market_share||0)*100).toFixed(1)+'%';
-  document.getElementById('ovDemand').textContent=Number(r.total_demand||0).toLocaleString();
-  document.getElementById('ovBSC').textContent=(parseFloat(r.balanced_scorecard||0)).toFixed(2);
+  document.getElementById('ovIncome').textContent='$'+Number(r.netIncome||0).toLocaleString();
+  document.getElementById('ovIncome').className='stat-value '+((r.netIncome||0)>=0?'positive':'negative');
+  document.getElementById('ovShare').textContent=(parseFloat(r.marketShare||0)*100).toFixed(1)+'%';
+  document.getElementById('ovDemand').textContent=Number(r.demand||0).toLocaleString();
+  document.getElementById('ovBSC').textContent=(parseFloat(r.scorecard?.balanced||0)).toFixed(2);
+
+  // Replace "Getting Started" with last-quarter summary
+  document.getElementById('overviewTips').innerHTML='<h3>📈 Q'+(game.current_quarter-1)+' Summary</h3><p style="color:var(--muted);font-size:.9rem;line-height:1.6">You sold '+Number(r.unitsSold||0).toLocaleString()+' units generating $'+Number(r.revenue||0).toLocaleString()+' in revenue. Net income was $'+Number(r.netIncome||0).toLocaleString()+'. Review the Results and Financials tabs for full details.</p>';
+
+  // Scorecard — from nested scorecard object
+  const sc=r.scorecard||{};
 
   // Results tab
+  const totalExp=(r.advertisingExpense||0)+(r.salesforceExpense||0)+(r.distributionExpense||0)+(r.internetExpense||0)+(r.rdExpense||0);
   document.getElementById('resultsContent').innerHTML=`
     <div class="scorecard-bar">
-      <div class="sc-item sc-total"><div class="label">Total Score</div><div class="score">${(parseFloat(r.balanced_scorecard||0)).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Financial</div><div class="score">${(parseFloat(r.financial_performance||0)).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Market</div><div class="score">${(parseFloat(r.market_performance||0)).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Mktg Effect.</div><div class="score">${(parseFloat(r.marketing_effectiveness||0)).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Investment</div><div class="score">${(parseFloat(r.investment_future||0)).toFixed(2)}</div></div>
-      <div class="sc-item"><div class="label">Wealth</div><div class="score">${(parseFloat(r.wealth_creation||0)).toFixed(2)}</div></div>
+      <div class="sc-item sc-total"><div class="label">Total Score</div><div class="score">${(parseFloat(sc.balanced||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Financial</div><div class="score">${(parseFloat(sc.financial||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Market</div><div class="score">${(parseFloat(sc.market||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Mktg Effect.</div><div class="score">${(parseFloat(sc.marketing||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Investment</div><div class="score">${(parseFloat(sc.investment||0)).toFixed(2)}</div></div>
+      <div class="sc-item"><div class="label">Wealth</div><div class="score">${(parseFloat(sc.wealth||0)).toFixed(2)}</div></div>
     </div>
     <div class="panel"><h3>Q${game.current_quarter-1} Performance</h3>
       <div class="panel-grid">
         <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">$${Number(r.revenue||0).toLocaleString()}</div></div>
-        <div class="stat-card"><div class="stat-label">COGS</div><div class="stat-value">$${Number(r.total_cogs||0).toLocaleString()}</div></div>
-        <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-value">$${Number(r.total_expenses||0).toLocaleString()}</div></div>
-        <div class="stat-card"><div class="stat-label">Net Income</div><div class="stat-value ${(r.net_income||0)>=0?'positive':'negative'}">$${Number(r.net_income||0).toLocaleString()}</div></div>
-        <div class="stat-card"><div class="stat-label">Units Sold</div><div class="stat-value">${Number(r.units_sold||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">COGS</div><div class="stat-value">$${Number(r.cogs||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-value">$${Number(totalExp).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Net Income</div><div class="stat-value ${(r.netIncome||0)>=0?'positive':'negative'}">$${Number(r.netIncome||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="stat-label">Units Sold</div><div class="stat-value">${Number(r.unitsSold||0).toLocaleString()}</div></div>
         <div class="stat-card"><div class="stat-label">Stockouts</div><div class="stat-value ${(r.stockouts||0)>0?'negative':''}">${r.stockouts||0}</div></div>
       </div>
     </div>`;
 
   // Financials tab
+  const grossProfit=(r.revenue||0)-(r.cogs||0);
   document.getElementById('financialsContent').innerHTML=`
     <div class="panel"><h3>Income Statement — Q${game.current_quarter-1}</h3>
       <table><tbody>
         <tr><td>Revenue</td><td style="text-align:right">$${N(r.revenue)}</td></tr>
-        <tr><td>Cost of Goods Sold</td><td style="text-align:right">($${N(r.total_cogs)})</td></tr>
-        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Gross Profit</td><td style="text-align:right">$${N((r.revenue||0)-(r.total_cogs||0))}</td></tr>
-        <tr><td>Operating Expenses</td><td style="text-align:right">($${N(r.total_expenses)})</td></tr>
-        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Net Income</td><td style="text-align:right;color:${(r.net_income||0)>=0?'var(--green)':'var(--red)'}">$${N(r.net_income)}</td></tr>
+        <tr><td>Cost of Goods Sold</td><td style="text-align:right">($${N(r.cogs)})</td></tr>
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Gross Profit</td><td style="text-align:right">$${N(grossProfit)}</td></tr>
+        <tr><td>Advertising</td><td style="text-align:right">($${N(r.advertisingExpense)})</td></tr>
+        <tr><td>Sales Force</td><td style="text-align:right">($${N(r.salesforceExpense)})</td></tr>
+        <tr><td>Distribution</td><td style="text-align:right">($${N(r.distributionExpense)})</td></tr>
+        <tr><td>Internet Marketing</td><td style="text-align:right">($${N(r.internetExpense)})</td></tr>
+        <tr><td>R&D</td><td style="text-align:right">($${N(r.rdExpense)})</td></tr>
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Operating Profit</td><td style="text-align:right;color:${(r.operatingProfit||0)>=0?'var(--green)':'var(--red)'}">$${N(r.operatingProfit)}</td></tr>
+        <tr><td>Tax (25%)</td><td style="text-align:right">($${N(Math.round(Math.max(0,(r.operatingProfit||0))*0.25))})</td></tr>
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Net Income</td><td style="text-align:right;color:${(r.netIncome||0)>=0?'var(--green)':'var(--red)'}">$${N(r.netIncome)}</td></tr>
       </tbody></table>
     </div>
     <div class="panel"><h3>Cash Flow</h3>
       <table><tbody>
-        <tr><td>Starting Cash</td><td style="text-align:right">$${N(r.starting_cash)}</td></tr>
-        <tr><td>Cash from Operations</td><td style="text-align:right">$${N(r.cash_from_operations)}</td></tr>
-        <tr style="font-weight:700"><td>Ending Cash</td><td style="text-align:right;color:var(--green)">$${N(r.ending_cash)}</td></tr>
+        <tr><td>Beginning Cash</td><td style="text-align:right">$${N((r.endingCash||0)-(r.cashFlow||0))}</td></tr>
+        <tr><td>Net Income</td><td style="text-align:right">$${N(r.netIncome)}</td></tr>
+        <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Ending Cash</td><td style="text-align:right;color:${(r.endingCash||0)>=0?'var(--green)':'var(--red)'}">$${N(r.endingCash)}</td></tr>
       </tbody></table>
     </div>`;
 }
